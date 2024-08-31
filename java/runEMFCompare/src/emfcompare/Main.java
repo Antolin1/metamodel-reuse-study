@@ -41,7 +41,7 @@ public class Main {
 	
 	private static final String PATH = "/home/antolin/projects/metamodel-reuse-study/metamodels";
 	private static final String JDBC_URL = "jdbc:sqlite:/home/antolin/projects/metamodel-reuse-study/dup_network.db";
-	private static final int lower = 0;
+	private static final int lower = 70000;
 	private static final int upper = 140000;
 	private static final String OUTPUT = "/home/antolin/projects/metamodel-reuse-study/distances" + Integer.toString(lower) 
 		+ "-" + Integer.toString(upper) + ".csv";

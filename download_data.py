@@ -2,6 +2,7 @@ import csv
 import os
 import sqlite3
 import time
+from datetime import datetime
 
 from github import Github, RateLimitExceededException, UnknownObjectException
 from tqdm import tqdm
@@ -13,35 +14,27 @@ CONN = sqlite3.connect('dup_network.db')
 CURSOR = CONN.cursor()
 
 
-def get_metadata(repo, file_path):
-    commits = [c for c in repo.get_commits(path=file_path)]
-
-    # Get the first (oldest) commit
-    first_commit = commits[-1]
-    first_commit_author = first_commit.commit.committer.name
-    first_commit_date = first_commit.commit.committer.date
-
-    # Get the last (most recent) commit
-    last_commit = commits[0]
-    last_commit_date = last_commit.commit.committer.date
-    return {"author": first_commit_author, "first_commit": first_commit_date, "last_commit": last_commit_date}
-
-
-def download_github_file(repo_name, file_path, output_filename):
+def download_github_file(repo_name, file_path, output_filename, cutoff_date="2019-12-31"):
     g = Github(TOKEN)
+    cutoff_date = datetime.strptime(cutoff_date, "%Y-%m-%d")
     repo = None
     while True:
         try:
             if repo is None:
                 repo = g.get_repo(repo_name)
-            file_content = repo.get_contents(file_path)
-            raw_data = file_content.decoded_content
 
-            with open(output_filename, "wb") as file:
-                file.write(raw_data)
-            print(f"File downloaded successfully as {output_filename}.")
-            metadata = get_metadata(repo, file_path)
-            return metadata  # Exit loop if successful
+            commits = repo.get_commits(until=cutoff_date)
+            if commits.totalCount == 0:
+                print(f"No commits before the cutoff_data {cutoff_date}")
+                return None
+
+            for commit in commits:
+                file_content = repo.get_contents(file_path, ref=commit.sha)
+                raw_data = file_content.decoded_content
+                with open(output_filename, "wb") as file:
+                    file.write(raw_data)
+                print(f"File downloaded successfully as {output_filename}.")
+                return commit.commit.committer.date  # Exit loop if successful
 
         except RateLimitExceededException:
             print("Rate limit exceeded. Sleeping for 60 seconds...")
@@ -54,16 +47,14 @@ def download_github_file(repo_name, file_path, output_filename):
             return None
 
 
-def register_to_db(user, repo, path, local_path, metadata):
+def register_to_db(user, repo, path, local_path, date):
     tuple = (user,
              repo,
              path,
              local_path,
-             metadata["first_commit"].strftime('%Y-%m-%d %H:%M:%S'),
-             metadata["last_commit"].strftime('%Y-%m-%d %H:%M:%S'),
-             metadata["author"])
+             date)
     CURSOR.execute("INSERT INTO metamodels (user, repo, "
-                   "repo_path, local_path, first_commit, last_commit, author) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                   "repo_path, local_path, considered_commit) VALUES (?, ?, ?, ?, ?)",
                    tuple)
     CONN.commit()
 
@@ -78,14 +69,12 @@ with open(FILE, mode='r', newline='') as file:
         repo = p.split('$')[1]
         path = '/'.join(p.split('$')[-1].split("#"))
 
-        print(user, repo, path)
         print(p)
-        metadata = download_github_file(user + '/' + repo, path, os.path.join(OUT_FOLDER, p))
-        if metadata:
+        date = download_github_file(user + '/' + repo, path, os.path.join(OUT_FOLDER, p))
+        time.sleep(1)
+        if date:
             cont += 1
-            register_to_db(user, repo, path, p, metadata)
-
-        # https://raw.githubusercontent.com/kit-sdq-emf-refactor-fork/edu.kit.ipd.sdq.emf.refactor/master/edu.kit.ipd.sdq.emf.refactor.tests/HubLike_Incoming.ecore
+            register_to_db(user, repo, path, p, date)
 
 print(f"Downloaded {cont} files")
 CONN.close()

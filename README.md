@@ -13,6 +13,10 @@ python download_data.py
 ```
 
 ```shell
+python download_metadata.py
+```
+
+```shell
 python extract_conteps.py
 ```
 

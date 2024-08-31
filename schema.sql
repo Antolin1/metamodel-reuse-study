@@ -6,7 +6,7 @@ CREATE TABLE metamodels (
 	local_path TEXT,
 	concepts TEXT,
 	first_commit DATE,
-	last_commit DATE,
+	considered_commit DATE,
 	author TEXT
 );
 
