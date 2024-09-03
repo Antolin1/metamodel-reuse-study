@@ -232,5 +232,3 @@ local.properties
 /tool_evaluation/__MACOSX/
 /tool_evaluation/manualDomains/
 /tool_evaluation/manualDomains.zip
-/tool_evaluation/negative.csv
-/tool_evaluation/positive.csv

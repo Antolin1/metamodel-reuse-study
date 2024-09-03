@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -99,7 +100,8 @@ public class Main {
 		Connection connection = DriverManager.getConnection(JDBC_URL);
 		String sqlQuery = "SELECT d.id as id, source.local_path as s, target.local_path as t FROM duplicates d JOIN metamodels "
 				+ "source on source.id = d.m1 JOIN metamodels target on target.id = d.m2 "
-				+ "WHERE d.id < " + Integer.toString(upper) + " AND d.id>= " + Integer.toString(lower);
+				+ "WHERE d.id < " + Integer.toString(upper) + " AND d.id>= " + Integer.toString(lower) +
+				" AND distance IS NULL";
 		Statement statement = connection.createStatement();
 		ResultSet resultSet = statement.executeQuery(sqlQuery);
 		
@@ -115,14 +117,22 @@ public class Main {
 			toSave.add(new Tuple(id, diffs));
 		}
 		
+		String sql = "UPDATE duplicates SET distance = ? WHERE id = ?";
+		
+		
 		//save to disk
-		FileWriter fw = new FileWriter(OUTPUT);
-		BufferedWriter writer = new BufferedWriter(fw);
+		//FileWriter fw = new FileWriter(OUTPUT);
+		//BufferedWriter writer = new BufferedWriter(fw);
 		for (Tuple tuple : toSave) {
-			writer.write(Integer.toString(tuple.id) +","+Integer.toString(tuple.diffs));
-            writer.newLine();
+			//writer.write(Integer.toString(tuple.id) +","+Integer.toString(tuple.diffs));
+            //writer.newLine();
+			PreparedStatement ps = connection.prepareStatement(sql);
+			ps.setInt(1, tuple.diffs);
+			ps.setInt(2, tuple.id);
+			ps.executeUpdate();
 		}
-		writer.flush();
+		//writer.flush();
+
 		connection.close();
 	}
 	
