@@ -1,6 +1,7 @@
 import argparse
 import math
 import sqlite3
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -20,7 +21,8 @@ def load_graph(db):
 
     G = nx.Graph()
     for x, local_path, user, repo, first_commit in tqdm(vertices, desc='Adding nodes'):
-        G.add_node(x, local_path=local_path, user=user, repo=repo, first_commit=first_commit)
+        G.add_node(x, local_path=local_path, user=user, repo=repo, first_commit=datetime.strptime(first_commit,
+                                                                                                  "%Y-%m-%d %H:%M:%S%z"))
     # add the edges to the graph
     for edge in tqdm(edges, desc='Adding edges'):
         if edge[1] not in G.nodes():
