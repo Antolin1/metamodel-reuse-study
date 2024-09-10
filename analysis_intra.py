@@ -11,7 +11,7 @@ from tqdm import tqdm
 from analysis_duplication import load_graph
 
 
-def intra_project_reuse(G):
+def intra_project_reuse(G, args):
     repos = set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for n in G])
     result = {}
     scores = []
@@ -46,22 +46,24 @@ def intra_project_reuse(G):
     print(f'Median diameter: {np.median(diameters):.2f}')
 
     # sample repos
-    repos_all = [r for r in result if result[r] > 0]
-    samples = random.sample(repos_all, 100)
-    sample_files = [json.dumps(files[s]) for s in samples]
+    if args.sample:
+        repos_all = [r for r in result if result[r] > 0]
+        samples = random.sample(repos_all, 100)
+        sample_files = [json.dumps(files[s]) for s in samples]
 
-    df = pd.DataFrame({'repos': samples, 'files': sample_files})
-    df.to_csv('samples_intra.csv', index=False)
+        df = pd.DataFrame({'repos': samples, 'files': sample_files})
+        df.to_csv('samples_intra.csv', index=False)
 
 
 def main(args):
     random.seed(123)
     G = load_graph(args.db)
-    intra_project_reuse(G)
+    intra_project_reuse(G, args)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--db', type=str, default='dup_network.db')
+    parser.add_argument('--sample', help='Remove duplicate models', action='store_true')
     args = parser.parse_args()
     main(args)

@@ -77,6 +77,7 @@ def sample_inter(G):
     cluster = {x: y for x, y in enumerate(ccs)}
     dict_cluster = {y: x for x, a in enumerate(ccs) for y in a}
 
+    # all the repositories that are different from the first repo
     population = list(
         set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for c in ccs for n in c if G.nodes[n]['user'] + '/' +
              G.nodes[n]['repo'] != G.nodes[c[0]]['user'] + '/' + G.nodes[c[0]]['repo']]))
@@ -91,9 +92,12 @@ def sample_inter(G):
                 return True
         return False
 
+    # metamodels within one repo that are also in a different repo
     metamodels = [[G.nodes[n]['local_path'] for n in G if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == r
                    and has_edge_other(G, n)]
                   for r in repos]
+
+    # the original metamodels
     originals = [[G.nodes[cluster[dict_cluster[n]][0]]['local_path'] for n in G if
                   G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == r
                   and has_edge_other(G, n)]
@@ -109,11 +113,13 @@ def main(args):
     amount_inter(G)
     distances_inter_vs_intra(G)
     normalized_scores(G)
-    sample_inter(G)
+    if args.sample:
+        sample_inter(G)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--db', type=str, default='dup_network.db')
+    parser.add_argument('--sample', help='Remove duplicate models', action='store_true')
     args = parser.parse_args()
     main(args)
