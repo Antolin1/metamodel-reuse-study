@@ -92,15 +92,15 @@ def sample_inter(G):
                 return True
         return False
 
-    # metamodels within one repo that are also in a different repo
+    # metamodels within one repo that are also in a different repo and are not the first one
     metamodels = [[G.nodes[n]['local_path'] for n in G if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == r
-                   and has_edge_other(G, n)]
+                   and has_edge_other(G, n) and G.nodes[cluster[dict_cluster[n]][0]] != n]
                   for r in repos]
 
     # the original metamodels
     originals = [[G.nodes[cluster[dict_cluster[n]][0]]['local_path'] for n in G if
                   G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == r
-                  and has_edge_other(G, n)]
+                  and has_edge_other(G, n) and G.nodes[cluster[dict_cluster[n]][0]] != n]
                  for r in repos]
 
     df = pd.DataFrame({'repo': repos, 'metamodel': metamodels, 'original': originals})
