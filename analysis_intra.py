@@ -11,6 +11,24 @@ from tqdm import tqdm
 from analysis_duplication import load_graph
 
 
+def calculate_sample_size(N, Z, P, E):
+    """
+    Calculate the required sample size for a finite population.
+
+    Parameters:
+    N (int): Population size
+    Z (float): Z-score corresponding to the desired confidence level
+    P (float): Estimated proportion (use 0.5 if unknown)
+    E (float): Margin of error (expressed as a decimal; e.g., 0.05 for 5%)
+
+    Returns:
+    int: Required sample size
+    """
+    numerator = N * (Z ** 2) * P * (1 - P)
+    denominator = (N - 1) * (E ** 2) + (Z ** 2) * P * (1 - P)
+
+    return int(numerator / denominator)
+
 def intra_project_reuse(G, args):
     repos = set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for n in G])
     result = {}
@@ -32,6 +50,7 @@ def intra_project_reuse(G, args):
 
     print(f'Proportion intra (repos that contain duplication) {len([s for s in scores if s > 0]) / len(scores):.4f}')
     print(f'Number repos intra {len([s for s in scores if s > 0])}')
+    print(f'Number repos {len(repos)}')
 
     plt.boxplot(diameters)
 
@@ -48,16 +67,18 @@ def intra_project_reuse(G, args):
     # sample repos
     if args.sample:
         repos_all = [r for r in result if result[r] > 0]
-        samples = random.sample(repos_all, 100)
+        k = calculate_sample_size(len(repos_all), 1.96, 0.5, 0.05)
+        samples = random.sample(repos_all, k)
         sample_files = [json.dumps(files[s]) for s in samples]
 
         df = pd.DataFrame({'repos': samples, 'files': sample_files})
         df.to_csv('samples_intra.csv', index=False)
 
-
 def main(args):
     random.seed(123)
     G = load_graph(args.db)
+    # repos_with_dup = repos_with_duplication(G)
+
     intra_project_reuse(G, args)
 
 

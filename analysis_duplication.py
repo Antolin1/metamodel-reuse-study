@@ -15,7 +15,7 @@ def load_graph(db):
     query = f'SELECT id, local_path, user, repo, first_commit FROM metamodels'
     df = pd.read_sql_query(query, conn)
     vertices = df.to_records(index=False).tolist()
-    query = f'SELECT id, m1, m2, distance FROM duplicates where distance != -1'
+    query = f'SELECT id, m1, m2, distance FROM duplicates'
     df = pd.read_sql_query(query, conn)
     edges = df.to_records(index=False).tolist()
 
@@ -32,31 +32,60 @@ def load_graph(db):
         G.add_edge(edge[1], edge[2], weight=edge[3])
     return G
 
+def get_unique_repos(G, c):
+    return len(set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for n in c]))
 
-def most_reused(G, k=10):
+
+def histogram(G):
     ccs = [c for c in list(sorted(nx.connected_components(G), key=len, reverse=True)) if len(c) > 1]
-    print(f'Number connected components > 1: {len(ccs)}')
-    for j, c in enumerate(ccs[0:k]):
-        c = [G.nodes[n]['local_path'] for n in c]
-        print(f'Top {j + 1}, Components {len(c)}')
-        print(c[0:10])
-
     len_ccs = [len(c) for c in ccs]
-    plt.hist(len_ccs, bins=300, edgecolor='black')
+    plt.hist(len_ccs, bins=200, edgecolor='black')
     plt.yscale('log')
 
     # Adding titles and labels
-    plt.title('Histogram of Sample Data')
-    plt.xlabel('Value')
+    plt.title('Cluster sizes histogram')
+    plt.xlabel('Cluster size')
     plt.ylabel('Frequency')
+
+    plt.savefig("histogram.pdf", format="pdf")
 
     # Display the plot
     plt.show()
 
-
-def amount_duplication(G):
+def most_duplicated(G, k=10):
     ccs = [c for c in list(sorted(nx.connected_components(G), key=len, reverse=True)) if len(c) > 1]
-    print(f"Duplicated files: {100 * sum([len(c) for c in ccs]) / len(G):.2f}")
+    for j, c in enumerate(ccs[0:k]):
+        files = [G.nodes[n]['local_path'] for n in c]
+        r = list(set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for n in c]))
+        print(f'Top {j + 1}, Components {len(c)}, Unique repos {len(r)}, Ratio {len(r) / len(c):.2f}')
+        print(files)
+
+    print('-----------------------------------')
+    ccs = [c for c in list(sorted(nx.connected_components(G), key=lambda x: get_unique_repos(G, x),
+                                  reverse=True)) if len(c) > 1]
+    for j, c in enumerate(ccs[0:k]):
+        files = [G.nodes[n]['local_path'] for n in c]
+        r = list(set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for n in c]))
+        print(f'Top {j + 1}, Components {len(c)}, Unique repos {len(r)}, Ratio {len(r) / len(c):.2f}')
+        print(files)
+
+
+
+def statistics_amount_duplication(G):
+
+    # count the number of nodes that have at least one edge divided by the total number of nodes
+    print(f"Duplicated files: {100 * len([n for n in G.nodes() if G.degree(n) > 0]) / len(G):.2f}")
+
+    # number of distinct meta-models
+    ccs = [c for c in list(sorted(nx.connected_components(G), key=len, reverse=True))]
+    print(f"Number of distinct meta-models: {len(ccs)}")
+
+    # number of total files
+    print(f"Number of total meta-models: {len(G)}")
+
+    # ratio of distinct meta-models
+    print(f"Ratio distinct meta-models: {100*len(ccs)/len(G):.2f}")
+
 
 
 def compactness(G):
@@ -80,9 +109,10 @@ def compactness(G):
 def main(args):
     G = load_graph(args.db)
 
-    amount_duplication(G)
-    most_reused(G, 10)
-    compactness(G)
+    statistics_amount_duplication(G)
+    histogram(G)
+    most_duplicated(G)
+    # compactness(G)
 
 
 if __name__ == '__main__':
