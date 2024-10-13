@@ -8,4 +8,6 @@ Automatic-Module-Name: runEMFCompare
 Export-Package: emfcompare
 Require-Bundle: org.eclipse.emf.compare;bundle-version="3.5.3",
  org.eclipse.emf.ecore.xmi;bundle-version="2.37.0",
- com.google.guava;bundle-version="33.2.0"
+ com.google.guava;bundle-version="33.2.0",
+ org.apache.commons.csv;bundle-version="1.8.0",
+ com.google.guava.failureaccess;bundle-version="1.0.2"

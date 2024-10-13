@@ -12,3 +12,7 @@ location "https://download.eclipse.org/modeling/emf/compare/updates/releases/3.3
 	org.eclipse.emf.compare.rcp.ui.feature.group lazy
 	org.eclipse.emf.compare.uml2.feature.group lazy
 }
+
+location "https://download.eclipse.org/tools/orbit/downloads/drops/R20211213173813/repository" {
+	org.apache.commons.csv
+}
