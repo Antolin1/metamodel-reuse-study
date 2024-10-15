@@ -54,7 +54,7 @@ public class ToolEvaluationPositives {
 				System.out.println(otherPath);
 				System.out.println("#elems left: " + mc.getLeftSize());
 				System.out.println("#elems right: " + mc.getRightSize());
-				System.out.println("#diffs: " + mc.getNumberOfAffectedElements());
+				System.out.println("#diffs: " + mc.getNumberOfDifferences());
 				System.out.println("#affected elems: " + mc.getNumberOfAffectedElements());
 
 				Map<String, Integer> diffCounts = mc.getDiffCounts();

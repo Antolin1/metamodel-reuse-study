@@ -46,7 +46,10 @@ public class MetamodelComparison {
 	protected ResourceSet leftRS, rightRS;
 
 	protected Map<String, Integer> diffCounts;
+	protected int numberOfDifferences;
 	protected int numberOfAffectedElements;
+
+	protected String leftPath, rightPath;
 
 	static {
 		Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().put("ecore", new EcoreResourceFactoryImpl());
@@ -135,6 +138,9 @@ public class MetamodelComparison {
 
 	public void compare(String leftPath, String rightPath) {
 
+		this.leftPath = leftPath;
+		this.rightPath = rightPath;
+
 		URI leftUri = URI.createFileURI(new File(leftPath).getAbsolutePath());
 		URI rightUri = URI.createFileURI(new File(rightPath).getAbsolutePath());
 
@@ -161,6 +167,8 @@ public class MetamodelComparison {
 
 	protected void processDifferences() {
 		boolean shouldCountFeatureDiff;
+
+		numberOfDifferences = comparison.getDifferences().size();
 
 
 		// a change diff is contained in a match of the same element
@@ -294,7 +302,7 @@ public class MetamodelComparison {
 	}
 
 	public int getNumberOfDifferences() {
-		return comparison.getDifferences().size();
+		return numberOfDifferences;
 	}
 
 	public Comparison getComparison() {
@@ -329,5 +337,13 @@ public class MetamodelComparison {
 		leftRS.getResources().forEach(r -> r.unload());
 		rightRS.getResources().forEach(r -> r.unload());
 		comparison = null;
+	}
+
+	public String getLeftPath() {
+		return leftPath;
+	}
+
+	public String getRightPath() {
+		return rightPath;
 	}
 }
