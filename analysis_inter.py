@@ -1,4 +1,5 @@
 import argparse
+import json
 import math
 import random
 
@@ -9,6 +10,9 @@ import pandas as pd
 from tqdm import tqdm
 
 from analysis_duplication import load_graph
+from analysis_intra import calculate_sample_size
+
+random.seed(123)
 
 
 def distances_inter_vs_intra(G):
@@ -130,42 +134,62 @@ def amount_inter(G):
 
 
 def sample_inter(G):
-    # when sampling exclude the first since it could potentially be the first meta-model
-    # todo: consider sampling repositories not meta-models. It could happen that in a cluster, all models come from
-    # the same repository. Sample, for each cluster, one repository that is not the first one?
-    # compute repositories that borrow meta-models from other repos
+    repos = set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for n in G])
+    repos_inter = []
+    for repo in tqdm(repos):
+        nodes = [n for n in G if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == repo]
+        for n in nodes:
+            neig = [m for m in nx.neighbors(G, n) if G.nodes[m]['user'] + '/' + G.nodes[m]['repo'] != repo]
+            if len(neig) > 0:
+                repos_inter.append(repo)
+                break
+    repos_inter = list(set(repos_inter))
+    print(f'Repos with inter-metamodels: {len(repos_inter)}')
+
     ccs = [[n for n in sorted(c, key=lambda x: G.nodes[x]['first_commit'])] for c in
            list(sorted(nx.connected_components(G), key=len, reverse=True)) if len(c) > 1]
-    cluster = {x: y for x, y in enumerate(ccs)}
-    dict_cluster = {y: x for x, a in enumerate(ccs) for y in a}
-
-    # all the repositories that are different from the first repo
-    population = list(
-        set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for c in ccs for n in c if G.nodes[n]['user'] + '/' +
-             G.nodes[n]['repo'] != G.nodes[c[0]]['user'] + '/' + G.nodes[c[0]]['repo']]))
-    # print([G.nodes[n]['first_commit'] for n in ccs[0]])
-
-    repos = random.sample(population, 100)
-
-    def has_edge_other(G, n):
-        repo = G.nodes[n]['user'] + '/' + G.nodes[n]['repo']
+    first_commit_metamodels = [c[0] for c in ccs]
+    repos_to_exclude = set()
+    for n in first_commit_metamodels:
         for m in G.neighbors(n):
-            if repo != G.nodes[m]['user'] + '/' + G.nodes[m]['repo']:
-                return True
-        return False
+            if G.nodes[m]['user'] + '/' + G.nodes[m]['repo'] != G.nodes[n]['user'] + '/' + G.nodes[n]['repo']:
+                repos_to_exclude.add(G.nodes[n]['user'] + '/' + G.nodes[n]['repo'])
 
-    # metamodels within one repo that are also in a different repo and are not the first one
-    metamodels = [[G.nodes[n]['local_path'] for n in G if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == r
-                   and has_edge_other(G, n) and G.nodes[cluster[dict_cluster[n]][0]] != n]
-                  for r in repos]
+    repos_to_exclude = list(repos_to_exclude)
+    print(f'Repos to exclude: {len(repos_to_exclude)}')
 
-    # the original metamodels
-    originals = [[G.nodes[cluster[dict_cluster[n]][0]]['local_path'] for n in G if
-                  G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == r
-                  and has_edge_other(G, n) and G.nodes[cluster[dict_cluster[n]][0]] != n]
-                 for r in repos]
+    population = [repo for repo in repos_inter if repo not in repos_to_exclude]
+    print(f'Population size: {len(population)}')
+    k = calculate_sample_size(len(population), 1.96, 0.5, 0.05)
+    print(f'Sample size: {k}')
+    sample = random.sample(population, k)
 
-    df = pd.DataFrame({'repo': repos, 'metamodel': metamodels, 'original': originals})
+    metamodels = []
+    originals = []
+    originals_links = []
+    for repo in sample:
+        nodes = [n for n in G if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == repo]
+        metamodels_repo = []
+        originals_repo = []
+        originals_repo_links = []
+        for n in nodes:
+            neig = [m for m in nx.neighbors(G, n) if G.nodes[m]['user'] + '/' + G.nodes[m]['repo'] != repo]
+            if len(neig) > 0:
+                metamodels_repo.append(G.nodes[n]['local_path'])
+                original = [n for n in neig if n in first_commit_metamodels]
+                assert len(original) == 1
+                original = original[0]
+                originals_repo.append(G.nodes[original]['local_path'])
+                originals_repo_links.append('https://github.com/' +
+                                            G.nodes[original]['user'] + '/' + G.nodes[original]['repo'])
+        metamodels.append(' || '.join(metamodels_repo))
+        originals.append(' || '.join(originals_repo))
+        originals_links.append(' || '.join(originals_repo_links))
+
+
+    df = pd.DataFrame({'repo': ['https://github.com/' + s for s in sample],
+                       'metamodels': metamodels, 'originals': originals,
+                       'originals_links': originals_links})
     df.to_csv('samples_inter.csv', index=False)
 
 def histogram(G):
@@ -199,8 +223,8 @@ def histogram(G):
 def main(args):
     random.seed(123)
     G = load_graph(args.db)
-    histogram(G)
-    amount_inter(G)
+    # histogram(G)
+    # amount_inter(G)
     # distances_inter_vs_intra(G)
     # normalized_scores(G)
     if args.sample:
