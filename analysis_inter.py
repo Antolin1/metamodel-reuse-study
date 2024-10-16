@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 from analysis_duplication import load_graph
 
@@ -65,6 +66,67 @@ def amount_inter(G):
                 cont += 1
                 break
     print(f'Proportion inter (metamodels that can be found in another repo) {cont / len(G):.4f}')
+    print(f'Number of inter {cont} out of {len(G)}')
+
+    # proportion of repositories that copy metamodels from other repositories
+    repos = set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for n in G])
+    cont = 0
+    for repo in tqdm(repos):
+        nodes = [n for n in G if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == repo]
+        for n in nodes:
+            neig = [m for m in nx.neighbors(G, n) if G.nodes[m]['user'] + '/' + G.nodes[m]['repo'] != repo]
+            if len(neig) > 0:
+                cont += 1
+                break
+    print(f'Proportion inter (repositories that copy metamodels from other repositories) {cont / len(repos):.4f}')
+    print(f'Number of inter {cont} out of {len(repos)}')
+
+    # proportion of repositories of one user that copy metamodels from other repositories different from the user
+    users = set([G.nodes[n]['user'] for n in G])
+    cont = 0
+    for user in tqdm(users):
+        nodes = [n for n in G if G.nodes[n]['user'] == user]
+        for n in nodes:
+            neig = [m for m in nx.neighbors(G, n) if G.nodes[m]['user'] != user]
+            if len(neig) > 0:
+                cont += 1
+                break
+    print(f'Proportion inter (repositories that copy metamodels from other repositories of different users) {cont / len(users):.4f}')
+
+    # boxplot with number of inter-metamodels per repository
+    repos = set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for n in G])
+    inter = []
+    for repo in tqdm(repos):
+        nodes = [n for n in G if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == repo]
+        cont = 0
+        for n in nodes:
+            neig = [m for m in nx.neighbors(G, n) if G.nodes[m]['user'] + '/' + G.nodes[m]['repo'] != repo]
+            if len(neig) > 0:
+                cont += 1
+        inter.append(cont)
+
+    inter = [i for i in inter if i > 0]
+
+    print(f'Median score: {np.median([s for s in inter if s > 0]):.2f}')
+    data = np.asarray([s for s in inter if s > 0])
+    # Step 1: Calculate the median of the data
+    median = np.median(data)
+    # Step 2: Calculate the absolute deviations from the median
+    absolute_deviations = np.abs(data - median)
+    # Step 3: Calculate the median of the absolute deviations (MAD)
+    mad = np.median(absolute_deviations)
+    print(f'Median absolute deviation: {mad:.2f}')
+
+    # blox-plot scores
+    plt.boxplot([s for s in inter if s > 0], vert=False)
+    plt.xscale('log')
+    plt.xlabel('# Inter-duplicated meta-models')
+    plt.title('Distribution of # inter-duplicated meta-models')
+    plt.savefig("boxplot_inter.pdf", format="pdf")
+    plt.show()
+
+
+
 
 
 def sample_inter(G):
@@ -106,13 +168,41 @@ def sample_inter(G):
     df = pd.DataFrame({'repo': repos, 'metamodel': metamodels, 'original': originals})
     df.to_csv('samples_inter.csv', index=False)
 
+def histogram(G):
+    ccs = [c for c in list(sorted(nx.connected_components(G), key=len, reverse=True)) if len(c) > 1]
+    len_ccs = [len(set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for n in c])) for c in ccs]
+    len_css = [l for l in len_ccs if l > 1]
+
+    plt.hist(len_ccs, bins=200, edgecolor='black')
+    plt.yscale('log')
+
+    # Adding titles and labels
+    plt.title('Unique repository histogram')
+    plt.xlabel('Unique repositories')
+    plt.ylabel('Frequency')
+
+    plt.savefig("histogram_inter.pdf", format="pdf")
+
+    # Display the plot
+    plt.show()
+
+    # Step 1: Calculate the median of the data
+    median = np.median(len_ccs)
+    # Step 2: Calculate the absolute deviations from the median
+    absolute_deviations = np.abs(len_ccs - median)
+    # Step 3: Calculate the median of the absolute deviations (MAD)
+    mad = np.median(absolute_deviations)
+    print(f'Median cluster size: {median:.2f}')
+    print(f'Median absolute deviation: {mad:.2f}')
+
 
 def main(args):
     random.seed(123)
     G = load_graph(args.db)
+    histogram(G)
     amount_inter(G)
-    distances_inter_vs_intra(G)
-    normalized_scores(G)
+    # distances_inter_vs_intra(G)
+    # normalized_scores(G)
     if args.sample:
         sample_inter(G)
 

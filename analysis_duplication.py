@@ -52,6 +52,15 @@ def histogram(G):
     # Display the plot
     plt.show()
 
+    # Step 1: Calculate the median of the data
+    median = np.median(len_ccs)
+    # Step 2: Calculate the absolute deviations from the median
+    absolute_deviations = np.abs(len_ccs - median)
+    # Step 3: Calculate the median of the absolute deviations (MAD)
+    mad = np.median(absolute_deviations)
+    print(f'Median cluster size: {median:.2f}')
+    print(f'Median absolute deviation: {mad:.2f}')
+
 def most_duplicated(G, k=10):
     ccs = [c for c in list(sorted(nx.connected_components(G), key=len, reverse=True)) if len(c) > 1]
     for j, c in enumerate(ccs[0:k]):

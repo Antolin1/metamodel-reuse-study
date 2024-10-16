@@ -51,6 +51,10 @@ def intra_project_reuse(G, args):
     print(f'Proportion intra (repos that contain duplication) {len([s for s in scores if s > 0]) / len(scores):.4f}')
     print(f'Number repos intra {len([s for s in scores if s > 0])}')
     print(f'Number repos {len(repos)}')
+    # top 10 repositories with the largest score
+    top_repos = sorted(result, key=result.get, reverse=True)[:10]
+    for repo in top_repos:
+        print(f'{repo} {result[repo]}')
 
     plt.boxplot(diameters)
 
@@ -62,7 +66,28 @@ def intra_project_reuse(G, args):
     plt.show()
 
     print(f'Mean diameter: {np.mean(diameters):.2f} +- {np.std(diameters)}')
+    # median and median absolute deviation
     print(f'Median diameter: {np.median(diameters):.2f}')
+
+
+    # blox-plot scores
+    plt.boxplot([s for s in scores if s > 0], vert=False)
+    plt.xscale('log')
+    plt.xlabel('# Duplicated meta-models')
+    plt.title('Distribution of # duplicated meta-models')
+    plt.savefig("boxplot.pdf", format="pdf")
+    plt.show()
+
+    print(f'Mean score: {np.mean([s for s in scores if s > 0]):.2f} +- {np.std([s for s in scores if s > 0])}')
+    print(f'Median score: {np.median([s for s in scores if s > 0]):.2f}')
+    data = np.asarray([s for s in scores if s > 0])
+    # Step 1: Calculate the median of the data
+    median = np.median(data)
+    # Step 2: Calculate the absolute deviations from the median
+    absolute_deviations = np.abs(data - median)
+    # Step 3: Calculate the median of the absolute deviations (MAD)
+    mad = np.median(absolute_deviations)
+    print(f'Median absolute deviation: {mad:.2f}')
 
     # sample repos
     if args.sample:

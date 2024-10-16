@@ -234,3 +234,6 @@ local.properties
 /tool_evaluation/manualDomains.zip
 /data.zip
 /histogram.pdf
+/violin_duplication.pdf
+/boxplot_inter.pdf
+/histogram_inter.pdf
