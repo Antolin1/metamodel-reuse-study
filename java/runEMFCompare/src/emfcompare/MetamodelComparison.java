@@ -45,7 +45,7 @@ public class MetamodelComparison {
 
 	protected ResourceSet leftRS, rightRS;
 
-	protected Map<String, Integer> diffCounts;
+	protected Map<String, Integer> diffCounts = new HashMap<>();
 	protected int numberOfDifferences;
 	protected int numberOfAffectedElements;
 
@@ -177,8 +177,6 @@ public class MetamodelComparison {
 		Set<Match> changedElements = new HashSet<>();
 		int otherDiffs = 0;
 
-		diffCounts = new HashMap<>();
-
 		for (Diff d : comparison.getDifferences()) {
 			shouldCountFeatureDiff = false;
 
@@ -283,6 +281,9 @@ public class MetamodelComparison {
 		EClassifier leftType = ((ETypedElement) m.getLeft()).getEType();
 		EClassifier rightType = ((ETypedElement) m.getRight()).getEType();
 
+		if (leftType == null || rightType == null) {
+			return false;
+		}
 		return leftType.eIsProxy() != rightType.eIsProxy();
 	}
 

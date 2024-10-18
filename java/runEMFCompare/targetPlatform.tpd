@@ -14,5 +14,5 @@ location "https://download.eclipse.org/modeling/emf/compare/updates/releases/3.3
 }
 
 location "https://download.eclipse.org/tools/orbit/downloads/drops/R20211213173813/repository" {
-	org.apache.commons.csv
+	org.apache.commons.csv lazy
 }
