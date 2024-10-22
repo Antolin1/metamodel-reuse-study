@@ -14,6 +14,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.compare.AttributeChange;
 import org.eclipse.emf.compare.Comparison;
 import org.eclipse.emf.compare.Diff;
+import org.eclipse.emf.compare.DifferenceKind;
 import org.eclipse.emf.compare.EMFCompare;
 import org.eclipse.emf.compare.Match;
 import org.eclipse.emf.compare.ReferenceChange;
@@ -74,13 +75,13 @@ public class MetamodelComparison {
 
 		MetamodelComparison mc = new MetamodelComparison();
 
-		String rootFolder = "../../tool_evaluation/";
+		String rootFolder = "../../metamodels/";
 
 		//		String left = "manualDomains/466_008_108_States--1035737706.ecore";
 		//		String right = "manualDomains/467_008_109_States--1687339431.ecore";
 
-		String left = "manualDomains/475_008_117_SText--1184500197.ecore";
-		String right = "manualDomains/488_008_130_SText-137906684.ecore";
+		String left = "arcanefoam$qvtMustus$tests#uk.ac.york.qvtd.tests.hhr#model#SimpleRDBMS.ecore";
+		String right = "arcanefoam$qvtMustus$archive#org.eclipse.qvt.declarative.test.relations.atlvm#resources#SimpleRdbms.ecore";
 
 		//		String left = "manualDomains/475mini.ecore";
 		//		String right = "manualDomains/488mini.ecore";
@@ -227,9 +228,10 @@ public class MetamodelComparison {
 						}
 					}
 				}
-				else {
-					// TODO: resource attachments change
-					//					System.out.println("Does this happen?" + d);
+				else if (d instanceof ResourceAttachmentChange) {
+					// change at the root of the metamodel
+					otherDiffs += 1;
+					shouldCountFeatureDiff = true;
 				}
 				break;
 
@@ -298,6 +300,17 @@ public class MetamodelComparison {
 			AttributeChange ac = (AttributeChange) d;
 			key += "-" + ac.getAttribute().getEContainingClass().getName() + "."
 					+ ac.getAttribute().getName();
+		}
+		else if (d instanceof ResourceAttachmentChange) {
+			ResourceAttachmentChange rac = (ResourceAttachmentChange) d;
+			Match m = rac.getMatch();
+			key += "-ResourceAttachment" + ".";
+			if (d.getKind() == DifferenceKind.ADD) {
+				key += m.getLeft().eClass().getName();
+			}
+			else if (d.getKind() == DifferenceKind.DELETE) {
+				key += m.getRight().eClass().getName();
+			}
 		}
 		diffCounts.put(key, diffCounts.getOrDefault(key, 0) + 1);
 	}
