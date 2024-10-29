@@ -77,8 +77,8 @@ public class MetamodelComparison {
 
 		String rootFolder = "../../metamodels/";
 
-		//		String left = "manualDomains/466_008_108_States--1035737706.ecore";
-		//		String right = "manualDomains/467_008_109_States--1687339431.ecore";
+		//		String left = "manualDomains/431_008_073_simplestatechart101-1289418548.ecore";
+		//		String right = "manualDomains/430_008_072_simplestatechart--84754729.ecore";
 
 		String left = "arcanefoam$qvtMustus$tests#uk.ac.york.qvtd.tests.hhr#model#SimpleRDBMS.ecore";
 		String right = "arcanefoam$qvtMustus$archive#org.eclipse.qvt.declarative.test.relations.atlvm#resources#SimpleRdbms.ecore";
@@ -167,8 +167,6 @@ public class MetamodelComparison {
 	}
 
 	protected void processDifferences() {
-		boolean shouldCountFeatureDiff;
-
 		numberOfDifferences = comparison.getDifferences().size();
 
 
@@ -179,51 +177,76 @@ public class MetamodelComparison {
 		int otherDiffs = 0;
 
 		for (Diff d : comparison.getDifferences()) {
-			shouldCountFeatureDiff = false;
 
 			switch (d.getKind()) {
 			case CHANGE:
+				boolean shouldCountChange = false;
 				if (d instanceof ReferenceChange) {
 					ReferenceChange rc = (ReferenceChange) d;
-					if (rc.getReference().getName().equals("eType")) {
-						Match m = d.getMatch();
-						// avoid counting type change when it happens with add/delete
-						// otherwise one change gets counted twise
-						// a side of the match missing -> added/deleted element
-						if (m.getLeft() != null && m.getRight() != null) {
+					// avoid counting type change when it happens with add/delete
+					// otherwise one change gets counted twice
+					// a side of the match missing -> added/deleted element
+					if (existLeftAndRight(d.getMatch())) {
+						if (rc.getReference().getName().equals("eType")) {
 							if (!isProxyTypeDifference(rc)) {
-								shouldCountFeatureDiff = true;
+								shouldCountChange = true;
 							}
 						}
+						else {
+							shouldCountChange = true;
+						}
 					}
+
 				}
 				else {
-					shouldCountFeatureDiff = true;
+					if (isSubordinateType(d)) {
+						// count the change, but for the container of this match
+						// e.g. the Annotation that holds a map entry that has changed
+						if (d.getMatch() != null && d.getMatch().eContainer() instanceof Match) {
+							Match parentMatch = (Match) d.getMatch().eContainer();
+							changedElements.add(parentMatch);
+						}
+					}
+					else {
+						// normal attribute changes
+						shouldCountChange = true;
+					}
 				}
 
-				if (shouldCountFeatureDiff) {
-					changedElements.add((Match) d.eContainer());
+				if (shouldCountChange) {
+					changedElements.add(d.getMatch());
 				}
 				break;
 
 			case ADD:
 			case DELETE:
-				if (d instanceof ReferenceChange) {
+				if (isCutoffType(d) && existLeftAndRight(d.getMatch())) {
+					// ignore add/del, treat it as a change of the cutoff type
+					changedElements.add(d.getMatch());
+				}
+				else if (d instanceof ReferenceChange) {
 					ReferenceChange rc = (ReferenceChange) d;
 					if (rc.getReference().isContainment()) {
-						otherDiffs += 1; // alternative way of counting because the matched elements are the containers
-						shouldCountFeatureDiff = true;
+						// check here if the type is a subordinate one
+						// if it is, count as a change of the container (if it's not an add/delete)
+
+						if (isSubordinateType(d) && existLeftAndRight(d.getMatch())) {
+							// we treat this as a changed container
+							changedElements.add(d.getMatch());
+						}
+						else {
+							countFeatureDiff(d);
+							otherDiffs += 1; // alternative way of counting because the matched elements are the containers
+						}
 					}
 					else {
 						// adds can happen in multi-valued non-containment refs
 						// e.g. supertypes. These are considered changes of the container
 						// only if the container has not been added/deleted (same issue as with eType)
 
-						Match m = d.getMatch();
-						if (m.getLeft() != null && m.getRight() != null) {
+						if (existLeftAndRight(d.getMatch())) {
 							if (!(rc.getReference().getName().equals("eSuperTypes") && isProxySuperTypeDifference(rc))) {
 								changedElements.add(d.getMatch());
-								shouldCountFeatureDiff = true;
 							}
 						}
 					}
@@ -231,7 +254,7 @@ public class MetamodelComparison {
 				else if (d instanceof ResourceAttachmentChange) {
 					// change at the root of the metamodel
 					otherDiffs += 1;
-					shouldCountFeatureDiff = true;
+					countFeatureDiff(d);
 				}
 				break;
 
@@ -239,19 +262,64 @@ public class MetamodelComparison {
 				if (d instanceof ReferenceChange) {
 					ReferenceChange rc = (ReferenceChange) d;
 					if (rc.getReference().isContainment()) {
-						otherDiffs += 1; // alternative way of counting because the matched elements are the containers
-						shouldCountFeatureDiff = true;
+						if (isCutoffType(d)) {
+							changedElements.add(d.getMatch());
+						}
+						else {
+							otherDiffs += 1; // alternative way of counting because the matched elements are the containers
+							countFeatureDiff(d);
+						}
 					}
 					else {
 						System.out.println("THIS SHOULD NOT HAPPEN: " + rc.getReference());
 					}
 				}
 			}
-			if (shouldCountFeatureDiff) {
-				countFeatureDiff(d);
-			}
+		}
+
+		for (Match m : changedElements) {
+			countChangeDiff(m);
 		}
 		numberOfAffectedElements = changedElements.size() + otherDiffs;
+	}
+
+	protected boolean existLeftAndRight(Match match) {
+		return match.getLeft() != null && match.getRight() != null;
+	}
+
+	protected boolean isSubordinateType(Diff d) {
+		switch (getAffectedType(d).getName()) {
+		case "EParameter":
+		case "EStringToStringMapEntry":
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	/**
+	 * A cutoff type marks where we should stop checking (because anything
+	 * below is a subordinate type)
+	 */
+	protected boolean isCutoffType(Diff d) {
+		switch (getAffectedType(d).getName()) {
+		case "EOperation":
+		case "EAnnotation":
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	protected void countChangeDiff(Match m) {
+		String key = "CHANGE-";
+		if (m.getLeft() != null) {
+			key += m.getLeft().eClass().getName();
+		}
+		else if (m.getRight() != null) {
+			key += m.getRight().eClass().getName();
+		}
+		diffCounts.put(key, diffCounts.getOrDefault(key, 0) + 1);
 	}
 
 	/**
@@ -293,13 +361,18 @@ public class MetamodelComparison {
 		String key = d.getKind().getLiteral();
 		if (d instanceof ReferenceChange) {
 			ReferenceChange rc = (ReferenceChange) d;
-			key += "-" + rc.getReference().getEContainingClass().getName() + "."
-					+ rc.getReference().getName();
+			key += "-" + getAffectedType(d).getName();
+
+			if (d.getKind() != DifferenceKind.CHANGE) {
+				key += "." + rc.getReference().getName();
+			}
 		}
 		else if (d instanceof AttributeChange) {
 			AttributeChange ac = (AttributeChange) d;
-			key += "-" + ac.getAttribute().getEContainingClass().getName() + "."
-					+ ac.getAttribute().getName();
+			key += "-" + getAffectedType(d).getName();
+			if (d.getKind() != DifferenceKind.CHANGE) {
+				key += "." + ac.getAttribute().getName();
+			}
 		}
 		else if (d instanceof ResourceAttachmentChange) {
 			ResourceAttachmentChange rac = (ResourceAttachmentChange) d;
@@ -313,6 +386,16 @@ public class MetamodelComparison {
 			}
 		}
 		diffCounts.put(key, diffCounts.getOrDefault(key, 0) + 1);
+	}
+
+	protected EClass getAffectedType(Diff d) {
+		Match m = d.getMatch();
+		if (m.getLeft() != null) {
+			return m.getLeft().eClass();
+		}
+		else {
+			return m.getRight().eClass();
+		}
 	}
 
 	public int getNumberOfDifferences() {
