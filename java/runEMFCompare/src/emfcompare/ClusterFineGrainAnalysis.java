@@ -27,9 +27,16 @@ import org.eclipse.emf.ecore.EClass;
 public class ClusterFineGrainAnalysis {
 
 	public static void main(String[] args) {
+
+		doAnalysis("cluster_3_changeAttribute.csv", "EAttribute");
+		doAnalysis("cluster_8_changeReference.csv", "EReference");
+
+		System.out.println("Done");
+	}
+
+	public static void doAnalysis(String clusterCsv, String className) {
 		String rootFolder = "../../";
 		String metamodelsFolder = rootFolder + "metamodels/";
-		String clusterCsv = "cluster_8_changeReference.csv";
 		String outputFile = clusterCsv + ".analysis.txt";
 
 		try (
@@ -55,14 +62,14 @@ public class ClusterFineGrainAnalysis {
 					writer.println(csvRecord.get("original_path"));
 
 					for (Entry<Match, List<Diff>> entry : changesMap.entrySet()) {
-						if (getAffectedType(entry.getKey()).getName().equals("EReference")) {
+						if (getAffectedType(entry.getKey()).getName().equals(className)) {
 							for (Diff d : entry.getValue()) {
 								countFeatureDiff(referenceDiffCounts, d);
 							}
 						}
 					}
-					writer.println("All changes: " + sortMap(mc.getDiffCounts()));
-					writer.println("Ref changes: " + sortMap(referenceDiffCounts));
+					writer.println("All changes : " + sortMap(mc.getDiffCounts()));
+					writer.println("Fine changes: " + sortMap(referenceDiffCounts));
 					writer.println();
 				}
 				catch (Exception e) {
@@ -75,7 +82,6 @@ public class ClusterFineGrainAnalysis {
 		catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("Done");
 	}
 
 	public static EClass getAffectedType(Match m) {
