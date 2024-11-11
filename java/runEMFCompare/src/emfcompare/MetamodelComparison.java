@@ -461,4 +461,8 @@ public class MetamodelComparison {
 	public String getRightPath() {
 		return rightPath;
 	}
+
+	public Map<Match, List<Diff>> getChangesMap() {
+		return changesMap;
+	}
 }
