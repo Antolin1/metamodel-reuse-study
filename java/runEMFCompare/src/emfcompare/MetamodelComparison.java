@@ -77,6 +77,7 @@ public class MetamodelComparison {
 		MetamodelComparison mc = new MetamodelComparison();
 
 		String rootFolder = "../../tool_evaluation/";
+		//		String rootFolder = "../../metamodels/";
 
 		String left = "manualDomains/431_008_073_simplestatechart101-1289418548.ecore";
 		String right = "manualDomains/430_008_072_simplestatechart--84754729.ecore";
@@ -221,9 +222,11 @@ public class MetamodelComparison {
 
 			case ADD:
 			case DELETE:
-				if (isCutoffType(d) && existLeftAndRight(d.getMatch())) {
+				if (isCutoffType(d)) {
 					// ignore add/del, treat it as a change of the cutoff type
-					registerChange(d.getMatch(), d);
+					if (existLeftAndRight(d.getMatch())) {
+						registerChange(d.getMatch(), d);
+					}
 				}
 				else if (d instanceof ReferenceChange) {
 					ReferenceChange rc = (ReferenceChange) d;
@@ -289,12 +292,17 @@ public class MetamodelComparison {
 	}
 
 	protected boolean isSubordinateType(Diff d) {
-		switch (getAffectedType(d).getName()) {
-		case "EParameter":
-		case "EStringToStringMapEntry":
-			return true;
-		default:
-			return false;
+		return isSubordinateType(d.getMatch());
+	}
+
+	protected boolean isSubordinateType(Match m) {
+		switch (getAffectedType(m).getName()) {
+			case "EParameter":
+			case "EStringToStringMapEntry":
+			case "EGenericType":
+				return true;
+			default:
+				return false;
 		}
 	}
 
@@ -368,10 +376,10 @@ public class MetamodelComparison {
 		String key = d.getKind().getLiteral();
 		if (d instanceof ReferenceChange) {
 			ReferenceChange rc = (ReferenceChange) d;
-			key += "-" + getAffectedType(d).getName();
+			key += "-" + rc.getValue().eClass().getName();
 
-			if (d.getKind() != DifferenceKind.CHANGE) {
-				key += "." + rc.getReference().getName();
+			if (d.getKind() == DifferenceKind.CHANGE) {
+				key += "SHOULDNOTHAPPEN";
 			}
 		}
 		else if (d instanceof AttributeChange) {
@@ -396,7 +404,10 @@ public class MetamodelComparison {
 	}
 
 	protected EClass getAffectedType(Diff d) {
-		Match m = d.getMatch();
+		return getAffectedType(d.getMatch());
+	}
+
+	protected EClass getAffectedType(Match m) {
 		if (m.getLeft() != null) {
 			return m.getLeft().eClass();
 		}
