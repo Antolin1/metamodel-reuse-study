@@ -4,11 +4,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.compare.AttributeChange;
@@ -50,6 +48,9 @@ public class MetamodelComparison {
 	protected int numberOfDifferences;
 	protected int numberOfAffectedElements;
 
+	// groups changes to the same model element or to the relevant parent
+	protected Map<Match, List<Diff>> changesMap = new HashMap<>();
+
 	protected String leftPath, rightPath;
 
 	static {
@@ -75,13 +76,13 @@ public class MetamodelComparison {
 
 		MetamodelComparison mc = new MetamodelComparison();
 
-		String rootFolder = "../../metamodels/";
+		String rootFolder = "../../tool_evaluation/";
 
-		//		String left = "manualDomains/431_008_073_simplestatechart101-1289418548.ecore";
-		//		String right = "manualDomains/430_008_072_simplestatechart--84754729.ecore";
+		String left = "manualDomains/431_008_073_simplestatechart101-1289418548.ecore";
+		String right = "manualDomains/430_008_072_simplestatechart--84754729.ecore";
 
-		String left = "arcanefoam$qvtMustus$tests#uk.ac.york.qvtd.tests.hhr#model#SimpleRDBMS.ecore";
-		String right = "arcanefoam$qvtMustus$archive#org.eclipse.qvt.declarative.test.relations.atlvm#resources#SimpleRdbms.ecore";
+		//		String left = "arcanefoam$qvtMustus$tests#uk.ac.york.qvtd.tests.hhr#model#SimpleRDBMS.ecore";
+		//		String right = "arcanefoam$qvtMustus$archive#org.eclipse.qvt.declarative.test.relations.atlvm#resources#SimpleRdbms.ecore";
 
 		//		String left = "manualDomains/475mini.ecore";
 		//		String right = "manualDomains/488mini.ecore";
@@ -173,7 +174,7 @@ public class MetamodelComparison {
 		// a change diff is contained in a match of the same element
 		// additions and deletions have special cases that are treated below
 		// moves are mostly of eContained elements
-		Set<Match> changedElements = new HashSet<>();
+
 		int otherDiffs = 0;
 
 		for (Diff d : comparison.getDifferences()) {
@@ -204,7 +205,7 @@ public class MetamodelComparison {
 						// e.g. the Annotation that holds a map entry that has changed
 						if (d.getMatch() != null && d.getMatch().eContainer() instanceof Match) {
 							Match parentMatch = (Match) d.getMatch().eContainer();
-							changedElements.add(parentMatch);
+							registerChange(parentMatch, d);
 						}
 					}
 					else {
@@ -214,7 +215,7 @@ public class MetamodelComparison {
 				}
 
 				if (shouldCountChange) {
-					changedElements.add(d.getMatch());
+					registerChange(d.getMatch(), d);
 				}
 				break;
 
@@ -222,7 +223,7 @@ public class MetamodelComparison {
 			case DELETE:
 				if (isCutoffType(d) && existLeftAndRight(d.getMatch())) {
 					// ignore add/del, treat it as a change of the cutoff type
-					changedElements.add(d.getMatch());
+					registerChange(d.getMatch(), d);
 				}
 				else if (d instanceof ReferenceChange) {
 					ReferenceChange rc = (ReferenceChange) d;
@@ -232,7 +233,7 @@ public class MetamodelComparison {
 
 						if (isSubordinateType(d) && existLeftAndRight(d.getMatch())) {
 							// we treat this as a changed container
-							changedElements.add(d.getMatch());
+							registerChange(d.getMatch(), d);
 						}
 						else {
 							countFeatureDiff(d);
@@ -246,7 +247,7 @@ public class MetamodelComparison {
 
 						if (existLeftAndRight(d.getMatch())) {
 							if (!(rc.getReference().getName().equals("eSuperTypes") && isProxySuperTypeDifference(rc))) {
-								changedElements.add(d.getMatch());
+								registerChange(d.getMatch(), d);
 							}
 						}
 					}
@@ -263,7 +264,7 @@ public class MetamodelComparison {
 					ReferenceChange rc = (ReferenceChange) d;
 					if (rc.getReference().isContainment()) {
 						if (isCutoffType(d)) {
-							changedElements.add(d.getMatch());
+							registerChange(d.getMatch(), d);
 						}
 						else {
 							otherDiffs += 1; // alternative way of counting because the matched elements are the containers
@@ -277,10 +278,10 @@ public class MetamodelComparison {
 			}
 		}
 
-		for (Match m : changedElements) {
+		for (Match m : changesMap.keySet()) {
 			countChangeDiff(m);
 		}
-		numberOfAffectedElements = changedElements.size() + otherDiffs;
+		numberOfAffectedElements = changesMap.size() + otherDiffs;
 	}
 
 	protected boolean existLeftAndRight(Match match) {
@@ -309,6 +310,12 @@ public class MetamodelComparison {
 		default:
 			return false;
 		}
+	}
+
+	protected void registerChange(Match m, Diff d) {
+		List<Diff> diffs = changesMap.getOrDefault(m, new ArrayList<>());
+		diffs.add(d);
+		changesMap.putIfAbsent(m, diffs);
 	}
 
 	protected void countChangeDiff(Match m) {
