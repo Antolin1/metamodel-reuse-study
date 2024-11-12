@@ -24,5 +24,4 @@ python extract_conteps.py
 python compute_duplicates.py
 ```
 
-Finally run the EMF compare of `java` folder.
-
+Finally run the EMF compare of `java` folder. To do this, you must load the target configuration present in the `.target` file (open in Ecilpse > Load Target Platform on top-right).
