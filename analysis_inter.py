@@ -149,16 +149,22 @@ def sample_inter(G):
     ccs = [[n for n in sorted(c, key=lambda x: G.nodes[x]['first_commit'])] for c in
            list(sorted(nx.connected_components(G), key=len, reverse=True)) if len(c) > 1]
     first_commit_metamodels = [c[0] for c in ccs]
-    repos_to_exclude = set()
-    for n in first_commit_metamodels:
-        for m in G.neighbors(n):
-            if G.nodes[m]['user'] + '/' + G.nodes[m]['repo'] != G.nodes[n]['user'] + '/' + G.nodes[n]['repo']:
-                repos_to_exclude.add(G.nodes[n]['user'] + '/' + G.nodes[n]['repo'])
 
-    repos_to_exclude = list(repos_to_exclude)
-    print(f'Repos to exclude: {len(repos_to_exclude)}')
+    population = []
+    for repo in repos_inter:
+        nodes = [n for n in G if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == repo]
+        for n in nodes:
+            if n in set(first_commit_metamodels):
+                continue
+            neig = [m for m in nx.neighbors(G, n) if G.nodes[m]['user'] + '/' + G.nodes[m]['repo'] != repo]
+            neig = [m for m in neig if m in set(first_commit_metamodels)]
+            if len(neig) > 0:
+                assert len(neig) == 1
+                population.append(repo)
+                break
+            else:
+                continue
 
-    population = [repo for repo in repos_inter if repo not in repos_to_exclude]
     print(f'Population size: {len(population)}')
     k = calculate_sample_size(len(population), 1.96, 0.5, 0.05)
     print(f'Sample size: {k}')
@@ -173,15 +179,18 @@ def sample_inter(G):
         originals_repo = []
         originals_repo_links = []
         for n in nodes:
+            if n in set(first_commit_metamodels):
+                continue
             neig = [m for m in nx.neighbors(G, n) if G.nodes[m]['user'] + '/' + G.nodes[m]['repo'] != repo]
+            neig = [m for m in neig if m in set(first_commit_metamodels)]
             if len(neig) > 0:
-                metamodels_repo.append(G.nodes[n]['local_path'])
-                original = [n for n in neig if n in first_commit_metamodels]
-                assert len(original) == 1
-                original = original[0]
+                assert len(neig) == 1
+                original = neig[0]
                 originals_repo.append(G.nodes[original]['local_path'])
                 originals_repo_links.append('https://github.com/' +
                                             G.nodes[original]['user'] + '/' + G.nodes[original]['repo'])
+                metamodels_repo.append(G.nodes[n]['local_path'])
+
         metamodels.append(' || '.join(metamodels_repo))
         originals.append(' || '.join(originals_repo))
         originals_links.append(' || '.join(originals_repo_links))
