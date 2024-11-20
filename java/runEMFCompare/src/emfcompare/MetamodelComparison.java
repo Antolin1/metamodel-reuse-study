@@ -51,6 +51,9 @@ public class MetamodelComparison {
 	// groups changes to the same model element or to the relevant parent
 	protected Map<Match, List<Diff>> changesMap = new HashMap<>();
 
+	// other diffs that are not changes
+	protected List<Diff> otherDiffs = new ArrayList<>();
+
 	protected String leftPath, rightPath;
 
 	static {
@@ -176,7 +179,7 @@ public class MetamodelComparison {
 		// additions and deletions have special cases that are treated below
 		// moves are mostly of eContained elements
 
-		int otherDiffs = 0;
+		int otherDiffsCounter = 0;
 
 		for (Diff d : comparison.getDifferences()) {
 
@@ -240,7 +243,8 @@ public class MetamodelComparison {
 						}
 						else {
 							countFeatureDiff(d);
-							otherDiffs += 1; // alternative way of counting because the matched elements are the containers
+							otherDiffsCounter += 1; // alternative way of counting because the matched elements are the containers
+							otherDiffs.add(d);
 						}
 					}
 					else {
@@ -257,7 +261,8 @@ public class MetamodelComparison {
 				}
 				else if (d instanceof ResourceAttachmentChange) {
 					// change at the root of the metamodel
-					otherDiffs += 1;
+					otherDiffsCounter += 1;
+					otherDiffs.add(d);
 					countFeatureDiff(d);
 				}
 				break;
@@ -270,7 +275,8 @@ public class MetamodelComparison {
 							registerChange(d.getMatch(), d);
 						}
 						else {
-							otherDiffs += 1; // alternative way of counting because the matched elements are the containers
+							otherDiffsCounter += 1; // alternative way of counting because the matched elements are the containers
+							otherDiffs.add(d);
 							countFeatureDiff(d);
 						}
 					}
@@ -284,7 +290,7 @@ public class MetamodelComparison {
 		for (Match m : changesMap.keySet()) {
 			countChangeDiff(m);
 		}
-		numberOfAffectedElements = changesMap.size() + otherDiffs;
+		numberOfAffectedElements = changesMap.size() + otherDiffsCounter;
 	}
 
 	protected boolean existLeftAndRight(Match match) {
@@ -464,5 +470,9 @@ public class MetamodelComparison {
 
 	public Map<Match, List<Diff>> getChangesMap() {
 		return changesMap;
+	}
+
+	public List<Diff> getOtherDiffs() {
+		return otherDiffs;
 	}
 }

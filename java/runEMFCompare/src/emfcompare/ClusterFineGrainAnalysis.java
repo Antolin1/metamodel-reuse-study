@@ -28,8 +28,15 @@ public class ClusterFineGrainAnalysis {
 
 	public static void main(String[] args) {
 
-		doAnalysis("cluster_3_changeAttribute.csv", "EAttribute");
-		doAnalysis("cluster_8_changeReference.csv", "EReference");
+		// macro/grouped clusters
+		doAnalysis("macro_cluster0-structural-major-sample.csv", "all");
+		doAnalysis("macro_cluster1-annotations-sample.csv", "all");
+		doAnalysis("macro_cluster2-nonstructural-minor-sample.csv", "all");
+		doAnalysis("macro_cluster3-package-sample.csv", "all");
+
+		// fine-grain analysis of grouped cluster 2 (non-structural, minor changes)
+		//doAnalysis("cluster_3_changeAttribute.csv", "EAttribute");
+		//doAnalysis("cluster_8_changeReference.csv", "EReference");
 
 		System.out.println("Done");
 	}
@@ -37,15 +44,17 @@ public class ClusterFineGrainAnalysis {
 	public static void doAnalysis(String clusterCsv, String className) {
 		String rootFolder = "../../";
 		String metamodelsFolder = rootFolder + "metamodels/";
-		String outputFile = clusterCsv + ".analysis.txt";
+		String inputFile = rootFolder + "feature_clusters/" + clusterCsv;
+		String outputFile = rootFolder + "feature_clusters/" + clusterCsv + ".analysis.txt";
 
 		try (
-				Reader reader = new FileReader(rootFolder + clusterCsv);
+				Reader reader = new FileReader(inputFile);
 				CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader());
-				PrintWriter writer = new PrintWriter(new FileWriter(rootFolder + outputFile));) {
+				PrintWriter writer = new PrintWriter(new FileWriter(outputFile));) {
 
+			int counter = 0;
 			for (CSVRecord csvRecord : csvParser) {
-				Map<String, Integer> referenceDiffCounts = new HashMap<>();
+				Map<String, Integer> diffCounts = new HashMap<>();
 
 				try {
 					MetamodelComparison mc = new MetamodelComparison();
@@ -56,21 +65,31 @@ public class ClusterFineGrainAnalysis {
 
 					Map<Match, List<Diff>> changesMap = mc.getChangesMap();
 
-					mc.dispose();
-
+					writer.println(counter);
 					writer.println(csvRecord.get("duplicate_path"));
 					writer.println(csvRecord.get("original_path"));
 
 					for (Entry<Match, List<Diff>> entry : changesMap.entrySet()) {
-						if (getAffectedType(entry.getKey()).getName().equals(className)) {
+						if (className.equalsIgnoreCase("all") ||
+								getAffectedType(entry.getKey()).getName().equals(className)) {
+
 							for (Diff d : entry.getValue()) {
-								countFeatureDiff(referenceDiffCounts, d);
+								countFeatureDiff(diffCounts, d);
 							}
 						}
 					}
-					writer.println("All changes : " + sortMap(mc.getDiffCounts()));
-					writer.println("Fine changes: " + sortMap(referenceDiffCounts));
+					// in the "all case", report other diffs as well (add, delete, move)
+					if (className.equalsIgnoreCase("all")) {
+						for (Diff d : mc.getOtherDiffs()) {
+							countFeatureDiff(diffCounts, d);
+						}
+					}
+					writer.println("All diffs: " + sortMap(mc.getDiffCounts()));
+					writer.println("Fine diffs: " + sortMap(diffCounts));
 					writer.println();
+
+					mc.dispose();
+					counter++;
 				}
 				catch (Exception e) {
 					System.out.println(csvRecord.get("duplicate_path"));
@@ -82,6 +101,7 @@ public class ClusterFineGrainAnalysis {
 		catch (IOException e) {
 			e.printStackTrace();
 		}
+		System.out.println(clusterCsv);
 	}
 
 	public static EClass getAffectedType(Match m) {

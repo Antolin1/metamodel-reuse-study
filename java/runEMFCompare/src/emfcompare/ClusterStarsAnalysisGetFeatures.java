@@ -18,12 +18,12 @@ public class ClusterStarsAnalysisGetFeatures {
 	public static void main(String[] args) {
 		String rootFolder = "../../";
 		String metamodelsFolder = rootFolder + "metamodels/";
-		String csvFile = "cluster_stars.csv";
+		String csvFile = rootFolder + "feature_clusters/cluster_stars.csv";
 
 		Set<String> features = new HashSet<>();
 
 		int cluster = 0;
-		try (Reader reader = new FileReader(rootFolder + csvFile);
+		try (Reader reader = new FileReader(csvFile);
 				CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader());) {
 
 			List<MetamodelComparison> comparisons = new ArrayList<>();

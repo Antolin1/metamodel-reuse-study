@@ -19,8 +19,8 @@ public class ClusterStarsAnalysis {
 	public static void main(String[] args) {
 		String rootFolder = "../../";
 		String metamodelsFolder = rootFolder + "metamodels/";
-		String inputCsv = "cluster_stars.csv";
-		String outputCsv = "cluster_stars_with_features.csv";
+		String inputCsv = rootFolder + "feature_clusters/cluster_stars.csv";
+		String outputCsv = rootFolder + "feature_clusters/cluster_stars_with_features.csv";
 
 		String[] metadata = { "cluster", "original", "original_path", "duplicate", "duplicate_path", "affected_elements" };
 		
@@ -42,9 +42,9 @@ public class ClusterStarsAnalysis {
 
 		int cluster = 0;
 		try (
-				Reader reader = new FileReader(rootFolder + inputCsv);
+				Reader reader = new FileReader(inputCsv);
 				CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader());
-				PrintWriter writer = new PrintWriter(new FileWriter(rootFolder + outputCsv));
+				PrintWriter writer = new PrintWriter(new FileWriter(outputCsv));
 				CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(header))) {
 
 			for (CSVRecord csvRecord : csvParser) {
