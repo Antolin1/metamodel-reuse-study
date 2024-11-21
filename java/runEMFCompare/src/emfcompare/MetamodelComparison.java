@@ -22,8 +22,12 @@ import org.eclipse.emf.compare.diff.DiffBuilder;
 import org.eclipse.emf.compare.diff.FeatureFilter;
 import org.eclipse.emf.compare.diff.IDiffEngine;
 import org.eclipse.emf.compare.diff.IDiffProcessor;
+import org.eclipse.emf.compare.match.IMatchEngine;
+import org.eclipse.emf.compare.match.impl.MatchEngineFactoryImpl;
+import org.eclipse.emf.compare.match.impl.MatchEngineFactoryRegistryImpl;
 import org.eclipse.emf.compare.scope.DefaultComparisonScope;
 import org.eclipse.emf.compare.scope.IComparisonScope;
+import org.eclipse.emf.compare.utils.UseIdentifiers;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EGenericType;
@@ -79,11 +83,11 @@ public class MetamodelComparison {
 
 		MetamodelComparison mc = new MetamodelComparison();
 
-		String rootFolder = "../../tool_evaluation/";
-		//		String rootFolder = "../../metamodels/";
+		//		String rootFolder = "../../tool_evaluation/";
+		String rootFolder = "../../metamodels/";
 
-		String left = "manualDomains/431_008_073_simplestatechart101-1289418548.ecore";
-		String right = "manualDomains/430_008_072_simplestatechart--84754729.ecore";
+		String left = "FitashUlHaq$PivotBasedQvto$plugins#org.eclipse.m2m.qvt.oml.ecore.imperativeocl#model#ImperativeOCL.ecore";
+		String right = "arcanefoam$qvtMustus$plugins#org.eclipse.qvt#model#traditionalEcore#ImperativeOCL.ecore";
 
 		//		String left = "arcanefoam$qvtMustus$tests#uk.ac.york.qvtd.tests.hhr#model#SimpleRDBMS.ecore";
 		//		String right = "arcanefoam$qvtMustus$archive#org.eclipse.qvt.declarative.test.relations.atlvm#resources#SimpleRdbms.ecore";
@@ -159,11 +163,22 @@ public class MetamodelComparison {
 		leftSize = countAllElements(leftResource);
 		rightSize = countAllElements(rightResource);
 
+		// ignore xmi:ids to avoid issues when one side has them, but the other does not
+		IMatchEngine.Factory matchEngineFactory = new MatchEngineFactoryImpl(UseIdentifiers.NEVER);
+		matchEngineFactory.setRanking(20);
+		IMatchEngine.Factory.Registry matchEngineRegistry = new MatchEngineFactoryRegistryImpl();
+		matchEngineRegistry.add(matchEngineFactory);
+
+		EMFCompare comparator = EMFCompare.builder()
+				.setMatchEngineFactoryRegistry(matchEngineRegistry)
+				.setDiffEngine(diffEngine)
+				.build();
+
 		// left is always considered the new version (e.g. new elements in left
 		// are additions, elements only appearing in right are considered deletions)
 		IComparisonScope scope = new DefaultComparisonScope(leftResource, rightResource, null);
 
-		comparison = EMFCompare.builder().setDiffEngine(diffEngine).build().compare(scope);
+		comparison = comparator.compare(scope);
 		processDifferences();
 	}
 
