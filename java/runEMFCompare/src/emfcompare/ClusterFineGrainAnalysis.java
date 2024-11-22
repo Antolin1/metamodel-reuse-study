@@ -29,14 +29,15 @@ public class ClusterFineGrainAnalysis {
 	public static void main(String[] args) {
 
 		// macro/grouped clusters
-		doAnalysis("macro_cluster0-structural-major-sample.csv", "all");
-		doAnalysis("macro_cluster1-annotations-sample.csv", "all");
-		doAnalysis("macro_cluster2-nonstructural-minor-sample.csv", "all");
-		doAnalysis("macro_cluster3-package-sample.csv", "all");
+		//		doAnalysis("macro_cluster0-structural-major-sample.csv", "all");
+		//		doAnalysis("macro_cluster1-annotations-sample.csv", "all");
+		//		doAnalysis("macro_cluster2-nonstructural-minor-sample.csv", "all");
+		//		doAnalysis("macro_cluster3-package-sample.csv", "all");
 
-		// fine-grain analysis of grouped cluster 2 (non-structural, minor changes)
-		//doAnalysis("cluster_3_changeAttribute.csv", "EAttribute");
-		//doAnalysis("cluster_8_changeReference.csv", "EReference");
+		// fine-grain analysis of kmeans clusters
+		for (int c = 0; c < 10; c++) {
+			doAnalysis(String.format("kmeans-cluster%d-sample.csv", c), "all");
+		}
 
 		System.out.println("Done");
 	}
