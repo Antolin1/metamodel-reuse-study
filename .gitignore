@@ -241,4 +241,3 @@ local.properties
 /histogram_inter.pdf
 cluster_stars.csv
 cluster_stars_with_features.csv
-/feature_clusters
