@@ -1,6 +1,9 @@
 package emfcompare;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -86,17 +89,16 @@ public class MetamodelComparison {
 		//		String rootFolder = "../../tool_evaluation/";
 		String rootFolder = "../../metamodels/";
 
-		String left = "FitashUlHaq$PivotBasedQvto$plugins#org.eclipse.m2m.qvt.oml.ecore.imperativeocl#model#ImperativeOCL.ecore";
-		String right = "arcanefoam$qvtMustus$plugins#org.eclipse.qvt#model#traditionalEcore#ImperativeOCL.ecore";
+		String left = null;
+		String right = null;
 
-		//		String left = "arcanefoam$qvtMustus$tests#uk.ac.york.qvtd.tests.hhr#model#SimpleRDBMS.ecore";
-		//		String right = "arcanefoam$qvtMustus$archive#org.eclipse.qvt.declarative.test.relations.atlvm#resources#SimpleRdbms.ecore";
-
-		//		String left = "manualDomains/475mini.ecore";
-		//		String right = "manualDomains/488mini.ecore";
-
-		//		String left = "manualDomains/513_008_155_UmlState-690565703.ecore";
-		//		String right = "manualDomains/512_008_154_UmlState--157654801.ecore";
+		try (BufferedReader br = new BufferedReader(new FileReader("compare.txt"))) {
+			left = br.readLine();
+			right = br.readLine();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
 
 		mc.compare(rootFolder + left, rootFolder + right);
 
