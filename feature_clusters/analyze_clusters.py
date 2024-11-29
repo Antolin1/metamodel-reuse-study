@@ -191,7 +191,6 @@ np.sum(pca.explained_variance_ratio_)
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
-from sklearn.datasets import make_blobs
 
 # List to store the WCSS values
 wcss = []
@@ -315,5 +314,3 @@ plt.show()
 
 #%%
 annotation_cluster.sort_values(["changes_ratio"]).to_csv("macro_cluster1-annotations-withratios.csv", index=False)
-
-# %%
