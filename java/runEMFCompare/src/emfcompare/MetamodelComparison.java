@@ -224,9 +224,9 @@ public class MetamodelComparison {
 					if (isSubordinateType(d)) {
 						// count the change, but for the container of this match
 						// e.g. the Annotation that holds a map entry that has changed
-						if (d.getMatch() != null && d.getMatch().eContainer() instanceof Match) {
-							Match parentMatch = (Match) d.getMatch().eContainer();
-							registerChange(parentMatch, d);
+						Match m = getFirstNotSubordinateParent(d);
+						if (m != null) {
+							registerChange(m, d);
 						}
 					}
 					else {
@@ -254,9 +254,13 @@ public class MetamodelComparison {
 						// check here if the type is a subordinate one
 						// if it is, count as a change of the container (if it's not an add/delete)
 
-						if (isSubordinateType(d) && existLeftAndRight(d.getMatch())) {
+						if (isSubordinateType(d)) {
 							// we treat this as a changed container
-							registerChange(d.getMatch(), d);
+							// we have to search for the first container that is not a subordinate
+							Match m = getFirstNotSubordinateParent(d);
+							if (m != null) {
+								registerChange(m, d);
+							}
 						}
 						else {
 							countFeatureDiff(d);
@@ -310,11 +314,46 @@ public class MetamodelComparison {
 		numberOfAffectedElements = changesMap.size() + otherDiffsCounter;
 	}
 
+	protected Match getFirstNotSubordinateParent(Diff d) {
+		Match m = d.getMatch();
+		while (m != null && isSubordinateType(m)) {
+			m = (Match) m.eContainer();
+		}
+		return m;
+	}
+
 	protected boolean existLeftAndRight(Match match) {
 		return match.getLeft() != null && match.getRight() != null;
 	}
 
+	protected boolean isAnnotationRelated(Diff d) {
+		if (d instanceof ReferenceChange) {
+			ReferenceChange rc = (ReferenceChange) d;
+			if (rc.getReference().getName().equals("eAnnotations")) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	protected boolean isGenericsRelated(Diff d) {
+		if (d instanceof ReferenceChange) {
+			ReferenceChange rc = (ReferenceChange) d;
+			if (rc.getReference().getName().equals("eGenericSuperTypes") ||
+					rc.getReference().getName().equals("eGenericType")) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	protected boolean isSubordinateType(Diff d) {
+		if (isAnnotationRelated(d)) {
+			return false;
+		}
+		if (isGenericsRelated(d)) {
+			return true;
+		}
 		return isSubordinateType(d.getMatch());
 	}
 
@@ -323,6 +362,7 @@ public class MetamodelComparison {
 			case "EParameter":
 			case "EStringToStringMapEntry":
 			case "EGenericType":
+			case "ETypeParameter":
 				return true;
 			default:
 				return false;
@@ -334,6 +374,9 @@ public class MetamodelComparison {
 	 * below is a subordinate type)
 	 */
 	protected boolean isCutoffType(Diff d) {
+		if (isAnnotationRelated(d)) {
+			return false;
+		}
 		switch (getAffectedType(d).getName()) {
 		case "EOperation":
 		case "EAnnotation":
