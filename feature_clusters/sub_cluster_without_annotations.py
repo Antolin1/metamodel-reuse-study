@@ -5,7 +5,7 @@ import numpy as np
 np.random.seed(43)
 
 #%%
-data = pd.read_csv('macro_cluster1-annotations-withratios.csv')
+data = pd.read_csv('macro_cluster1-annotations.csv')
 data
 
 #%%

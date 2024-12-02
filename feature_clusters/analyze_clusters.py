@@ -262,11 +262,6 @@ def group_clusters(label):
 data['cluster_kmeans_manual'] = data['cluster_kmeans'].apply(group_clusters)
 data
 
-#%%
-data[data['cluster_kmeans_manual'] == 0].to_csv("macro_cluster0-structural-major.csv", index=False)
-data[data['cluster_kmeans_manual'] == 1].to_csv("macro_cluster1-annotations.csv", index=False)
-data[data['cluster_kmeans_manual'] == 2].to_csv("macro_cluster2-nonstructural-minor.csv", index=False)
-data[data['cluster_kmeans_manual'] == 3].to_csv("macro_cluster3-package.csv", index=False)
 
 #%%
 data[data['inter']]['cluster_kmeans_manual'].hist(density=True)
@@ -295,14 +290,6 @@ annotation_cluster["changes_ratio"] = annotation_cluster["annotation_changes"] /
 annotation_cluster["other_changes"].hist(bins=100)
 
 # %%
-annotation_cluster["annotation_changes"].agg(["median", "mean", "std", "min", "max"])
-
-#%%
-annotation_cluster["other_changes"].agg(["median", "mean", "std", "min", "max"])
-# %%
-annotation_cluster["changes_ratio"].agg(["median", "mean", "std", "min", "max"])
-
-#%%
 cumulative_distribution = annotation_cluster["changes_ratio"].value_counts().sort_index().cumsum()
 
 # Plot the cumulative distribution
@@ -313,4 +300,9 @@ plt.title('Cumulative Distribution')
 plt.show()
 
 #%%
-annotation_cluster.sort_values(["changes_ratio"]).to_csv("macro_cluster1-annotations-withratios.csv", index=False)
+
+data[data['cluster_kmeans_manual'] == 0].to_csv("macro_cluster0-structural-major.csv", index=False)
+data[data['cluster_kmeans_manual'] == 2].to_csv("macro_cluster2-nonstructural-minor.csv", index=False)
+data[data['cluster_kmeans_manual'] == 3].to_csv("macro_cluster3-package.csv", index=False)
+
+annotation_cluster.sort_values(["changes_ratio"]).to_csv("macro_cluster1-annotations.csv", index=False)
