@@ -24,14 +24,14 @@ public class ClusterStarsAnalysis {
 
 		String[] metadata = { "cluster", "original", "original_path", "duplicate", "duplicate_path", "affected_elements" };
 		
-		String[] features = { "ADD-EAnnotation", "ADD-EAttribute", "ADD-EClass", "ADD-EDataType", "ADD-EEnum", "ADD-EEnumLiteral", "ADD-EGenericType",
-				"ADD-EOperation", "ADD-EPackage", "ADD-EReference", "ADD-ETypeParameter", "ADD-ResourceAttachment.EDataType",
-				"ADD-ResourceAttachment.EPackage", "CHANGE-EAnnotation", "CHANGE-EAttribute", "CHANGE-EClass", "CHANGE-EDataType", "CHANGE-EEnum",
-				"CHANGE-EEnumLiteral", "CHANGE-EGenericType", "CHANGE-EOperation", "CHANGE-EPackage", "CHANGE-EParameter", "CHANGE-EReference",
-				"DELETE-EAnnotation", "DELETE-EAttribute", "DELETE-EClass", "DELETE-EDataType", "DELETE-EEnum", "DELETE-EEnumLiteral",
-				"DELETE-EGenericType", "DELETE-EOperation", "DELETE-EPackage", "DELETE-EReference", "DELETE-ETypeParameter",
+		String[] features = { "ADD-EAnnotation", "ADD-EAttribute", "ADD-EClass", "ADD-EDataType", "ADD-EEnum", "ADD-EEnumLiteral", "ADD-EOperation",
+				"ADD-EPackage", "ADD-EReference", "ADD-ResourceAttachment.EDataType", "ADD-ResourceAttachment.EPackage", "CHANGE-EAnnotation",
+				"CHANGE-EAttribute", "CHANGE-EClass", "CHANGE-EDataType", "CHANGE-EEnum", "CHANGE-EEnumLiteral", "CHANGE-EOperation",
+				"CHANGE-EPackage", "CHANGE-EReference", "DELETE-EAnnotation", "DELETE-EAttribute", "DELETE-EClass",
+				"DELETE-EDataType", "DELETE-EEnum", "DELETE-EEnumLiteral", "DELETE-EOperation", "DELETE-EPackage", "DELETE-EReference",
 				"DELETE-ResourceAttachment.EPackage", "MOVE-EAttribute", "MOVE-EClass", "MOVE-EDataType", "MOVE-EEnum", "MOVE-EEnumLiteral",
-				"MOVE-EGenericType", "MOVE-EOperation", "MOVE-EPackage", "MOVE-EReference" };
+				"MOVE-EOperation", "MOVE-EPackage", "MOVE-EReference" };
+
 
 
 		String[] header = new String[metadata.length + features.length];

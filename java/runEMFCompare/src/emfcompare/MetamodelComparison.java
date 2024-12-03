@@ -218,15 +218,15 @@ public class MetamodelComparison {
 					// otherwise one change gets counted twice
 					// a side of the match missing -> added/deleted element
 					if (existLeftAndRight(d.getMatch())) {
-						if (rc.getReference().getName().equals("eType")) {
-							if (!isProxyTypeDifference(rc)) {
-								shouldCountChange = true;
-							}
-						}
-						else if (isSubordinateType(d)) {
+						if (isSubordinateType(d)) {
 							Match m = getFirstNotSubordinateParent(d);
 							if (m != null) {
 								registerChange(m, d);
+							}
+						}
+						else if (rc.getReference().getName().equals("eType")) {
+							if (!isProxyTypeDifference(rc)) {
+								shouldCountChange = true;
 							}
 						}
 						else {
