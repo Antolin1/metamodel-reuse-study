@@ -5,11 +5,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.compare.AttributeChange;
@@ -130,15 +132,22 @@ public class MetamodelComparison {
 		System.out.println("@@@@@@@@@@@@@@@@");
 		Map<String, Integer> diffCounts = mc.getDiffCounts();
 
-		List<String> sortedKeys = new ArrayList<>(diffCounts.keySet());
-		Collections.sort(sortedKeys);
-
-		// Print the results
-		for (String key : sortedKeys) {
-			System.out.println(key + ": " + diffCounts.get(key));
-		}
+		System.out.println(sortMap(diffCounts));
 
 		mc.dispose();
+	}
+
+	public static Map<String, Integer> sortMap(Map<String, Integer> map) {
+		Map<String, Integer> sortedMap = map.entrySet()
+				.stream()
+				.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+				.collect(Collectors.toMap(
+						Map.Entry::getKey,
+						Map.Entry::getValue,
+						(e1, e2) -> e1,
+						LinkedHashMap::new // Preserve the order of sorted entries
+				));
+		return sortedMap;
 	}
 
 	public Map<String, Integer> getDiffCounts() {
@@ -214,11 +223,16 @@ public class MetamodelComparison {
 								shouldCountChange = true;
 							}
 						}
+						else if (isSubordinateType(d)) {
+							Match m = getFirstNotSubordinateParent(d);
+							if (m != null) {
+								registerChange(m, d);
+							}
+						}
 						else {
 							shouldCountChange = true;
 						}
 					}
-
 				}
 				else {
 					if (isSubordinateType(d)) {
@@ -252,7 +266,7 @@ public class MetamodelComparison {
 					ReferenceChange rc = (ReferenceChange) d;
 					if (rc.getReference().isContainment()) {
 						// check here if the type is a subordinate one
-						// if it is, count as a change of the container (if it's not an add/delete)
+						// if it is, count as a change of the container
 
 						if (isSubordinateType(d)) {
 							// we treat this as a changed container
@@ -294,6 +308,12 @@ public class MetamodelComparison {
 					if (rc.getReference().isContainment()) {
 						if (isCutoffType(d)) {
 							registerChange(d.getMatch(), d);
+						}
+						else if (isSubordinateType(d)) {
+							Match m = getFirstNotSubordinateParent(d);
+							if (m != null) {
+								registerChange(m, d);
+							}
 						}
 						else {
 							otherDiffsCounter += 1; // alternative way of counting because the matched elements are the containers
@@ -340,7 +360,8 @@ public class MetamodelComparison {
 		if (d instanceof ReferenceChange) {
 			ReferenceChange rc = (ReferenceChange) d;
 			if (rc.getReference().getName().equals("eGenericSuperTypes") ||
-					rc.getReference().getName().equals("eGenericType")) {
+					rc.getReference().getName().equals("eGenericType") ||
+					rc.getReference().getName().equals("eTypeParameters")) {
 				return true;
 			}
 		}
