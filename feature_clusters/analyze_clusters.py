@@ -19,44 +19,36 @@ data['inter'] = data['repo_original'] != data['repo_duplicate']
 data
 
 #%%
-all_features = ["ADD-EAnnotation", "ADD-EAttribute", "ADD-EClass", "ADD-EDataType", "ADD-EEnum", "ADD-EEnumLiteral", "ADD-EGenericType",
-				"ADD-EOperation", "ADD-EPackage", "ADD-EReference", "ADD-ETypeParameter", "ADD-ResourceAttachment.EDataType",
-				"ADD-ResourceAttachment.EPackage", "CHANGE-EAnnotation", "CHANGE-EAttribute", "CHANGE-EClass", "CHANGE-EDataType", "CHANGE-EEnum",
-				"CHANGE-EEnumLiteral", "CHANGE-EGenericType", "CHANGE-EOperation", "CHANGE-EPackage", "CHANGE-EParameter", "CHANGE-EReference",
-				"DELETE-EAnnotation", "DELETE-EAttribute", "DELETE-EClass", "DELETE-EDataType", "DELETE-EEnum", "DELETE-EEnumLiteral",
-				"DELETE-EGenericType", "DELETE-EOperation", "DELETE-EPackage", "DELETE-EReference", "DELETE-ETypeParameter",
+all_features = ["ADD-EAnnotation", "ADD-EAttribute", "ADD-EClass", "ADD-EDataType", "ADD-EEnum", "ADD-EEnumLiteral", "ADD-EOperation",
+				"ADD-EPackage", "ADD-EReference", "ADD-ResourceAttachment.EDataType", "ADD-ResourceAttachment.EPackage", "CHANGE-EAnnotation",
+				"CHANGE-EAttribute", "CHANGE-EClass", "CHANGE-EDataType", "CHANGE-EEnum", "CHANGE-EEnumLiteral", "CHANGE-EOperation",
+				"CHANGE-EPackage", "CHANGE-EReference", "DELETE-EAnnotation", "DELETE-EAttribute", "DELETE-EClass",
+				"DELETE-EDataType", "DELETE-EEnum", "DELETE-EEnumLiteral", "DELETE-EOperation", "DELETE-EPackage", "DELETE-EReference",
 				"DELETE-ResourceAttachment.EPackage", "MOVE-EAttribute", "MOVE-EClass", "MOVE-EDataType", "MOVE-EEnum", "MOVE-EEnumLiteral",
-				"MOVE-EGenericType", "MOVE-EOperation", "MOVE-EPackage", "MOVE-EReference"]
+				"MOVE-EOperation", "MOVE-EPackage", "MOVE-EReference"]
 
 
 discarded_features = [
-                      # Discarded features related with generics: I've never used them myself
-                      #   and I don't think they're that popular (in the Babur paper this
-                      #   might be commented) -> check count_generics.py (not that much used)
-                      "ADD-EGenericType", "ADD-ETypeParameter",
-				              "CHANGE-EGenericType", "DELETE-EGenericType", "DELETE-ETypeParameter",
-				              "MOVE-EGenericType", "CHANGE-EParameter",
-
                       # Resource attachments in the root that make no sense if you want to have
                       #   a well-formed metamodel tree (with an epackage in the root, subpackages, etc),
                       #   seem like "typos" or mistakes when defining a metamodel
                       "ADD-ResourceAttachment.EDataType"
                       ]
 
-simple_features = ["ADD-EAnnotation", "ADD-EAttribute", "ADD-EClass", "ADD-EDataType", "ADD-EEnum", "ADD-EEnumLiteral",
-                   "ADD-EOperation", "ADD-EPackage", "ADD-EReference",
-                   "ADD-ResourceAttachment.EPackage", "CHANGE-EAnnotation", "CHANGE-EAttribute", "CHANGE-EClass", "CHANGE-EDataType", "CHANGE-EEnum",
-                   "CHANGE-EEnumLiteral", "CHANGE-EOperation", "CHANGE-EPackage", "CHANGE-EReference",
-                   "DELETE-EAnnotation", "DELETE-EAttribute", "DELETE-EClass", "DELETE-EDataType", "DELETE-EEnum", "DELETE-EEnumLiteral",
-                   "DELETE-EOperation", "DELETE-EPackage", "DELETE-EReference",
-                   "DELETE-ResourceAttachment.EPackage", "MOVE-EAttribute", "MOVE-EClass", "MOVE-EDataType", "MOVE-EEnum", "MOVE-EEnumLiteral",
-                   "MOVE-EOperation", "MOVE-EPackage", "MOVE-EReference"]
+simple_features = ["ADD-EAnnotation", "ADD-EAttribute", "ADD-EClass", "ADD-EDataType", "ADD-EEnum", "ADD-EEnumLiteral", "ADD-EOperation",
+				"ADD-EPackage", "ADD-EReference", "ADD-ResourceAttachment.EPackage", "CHANGE-EAnnotation",
+				"CHANGE-EAttribute", "CHANGE-EClass", "CHANGE-EDataType", "CHANGE-EEnum", "CHANGE-EEnumLiteral", "CHANGE-EOperation",
+				"CHANGE-EPackage", "CHANGE-EReference", "DELETE-EAnnotation", "DELETE-EAttribute", "DELETE-EClass",
+				"DELETE-EDataType", "DELETE-EEnum", "DELETE-EEnumLiteral", "DELETE-EOperation", "DELETE-EPackage", "DELETE-EReference",
+				"DELETE-ResourceAttachment.EPackage", "MOVE-EAttribute", "MOVE-EClass", "MOVE-EDataType", "MOVE-EEnum", "MOVE-EEnumLiteral",
+				"MOVE-EOperation", "MOVE-EPackage", "MOVE-EReference"]
 
 # when grouping features, some of them are changed from "add" or "delete" to "change", just to reduce the
 # detail of the features to the parent elements
 
 # - In EAnnotations, any add or delete to their unbounded references counts as a "change annotation"
 # - Same for EException and EParameters of an EOperation
+# - Same for generics anywhere they appear
 
 grouped_features = {}
 
@@ -114,12 +106,11 @@ plt.show()
 #%%
 """# Cluster analysis"""
 
-import xml.etree.ElementTree as ET
-
 data = data[data['affected_elements']>0]
 data
 
 #%%
+import xml.etree.ElementTree as ET
 
 def count_xmi_id_attributes(xml_file):
     tree = ET.parse(xml_file)
@@ -172,9 +163,26 @@ with open("metamodels.txt", "w") as f:
 
 
 #%%
-features = [c for c in data.columns if 'ADD' in c or 'CHANGE' in c or 'DELETE' in c or 'MOVE' in c]
-len(features)
 
+features = [c for c in data.columns if ('ADD' in c or 'CHANGE' in c or 'DELETE' in c or 'MOVE' in c) and 'EAnnotation' not in c]
+
+print(len(features))
+
+data["sum_changes"] = data[features].sum(axis=1)
+data["sum_changes"].describe()
+
+#%%
+
+# Separate rows with no changes appart from in annotations
+# Kmeans does not detect these as separate as we would prefer
+
+data_no_changes = data[data["sum_changes"] == 0]
+data = data[data["sum_changes"] > 0].copy()
+
+print("No changes: ", data_no_changes.shape)
+print("Changes: ", data.shape)
+
+#%%
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import normalize
@@ -182,9 +190,21 @@ from sklearn.preprocessing import normalize
 X = data[features]
 X = normalize(X, norm='l2')
 
-pca = PCA(n_components=15)
+pca = PCA(n_components=13)
 X_transformed = pca.fit_transform(X)
-np.sum(pca.explained_variance_ratio_)
+
+pca_components_df = pd.DataFrame(pca.components_, columns=features, index=[f'PC{i+1}' for i in range(pca.n_components_)])
+
+# Extract the 5 features with the greatest contribution to each PCA component
+top_features = {}
+for i in range(pca.n_components_):
+    component = pca_components_df.iloc[i]
+    top_features[f'PC{i+1}'] = component.abs().sort_values(ascending=False).head(5).index.tolist()
+
+# Display the top features for each component
+for component, features in top_features.items():
+    print(f"Top 5 features for {component}: {features}")
+
 
 #%%
 
@@ -194,7 +214,7 @@ from sklearn.cluster import KMeans
 
 # List to store the WCSS values
 wcss = []
-ks_considered = [2, 5, 10, 15, 20, 25, 30]
+ks_considered = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25, 30]
 
 # Loop through different values of k (number of clusters)
 for k in ks_considered:
@@ -214,11 +234,13 @@ plt.show()
 #%%
 from kneed import KneeLocator
 
-kneedle = KneeLocator([2, 5, 10, 15, 20, 25, 30],
+kneedle = KneeLocator(ks_considered,
                       wcss, curve='convex', direction='decreasing')
 
 elbow_point = kneedle.elbow
 print(f"Elbow point: {elbow_point}")
+
+#%%
 
 kmeans = KMeans(n_clusters=kneedle.elbow, init='k-means++',
                     max_iter=300, n_init=10, random_state=0)
@@ -240,28 +262,27 @@ data['cluster_kmeans'] = kmeans.labels_
 
 
 #%% take samples of kmeans clusters
-'''
 np.random.seed(43)
 sample_size = 40
 for cluster in range(10):
     data_cluster = data[kmeans.labels_ == cluster]
     data_cluster.sample(sample_size).to_csv(f"kmeans-cluster{cluster}-sample.csv", index=False)
-'''
+
 
 #%%
 def group_clusters(label):
-    if label in [2,3,8]: # estructurales (major?)
+    if label in [2,4,5,7,8,9]: # estructurales (major?)
       return 0
-    elif label in [0,5,9]: # anotaciones
+    elif label in [1,3]: # no estructurales (minor?)
       return 1
-    elif label in [6,7]: # no estructurales (minor?)
+    elif label in [0,6]: # paquete
       return 2
-    elif label in [1,4]: # paquete
-      return 3
 
 data['cluster_kmeans_manual'] = data['cluster_kmeans'].apply(group_clusters)
 data
 
+#%%
+data['cluster_kmeans_manual'].value_counts()
 
 #%%
 data[data['inter']]['cluster_kmeans_manual'].hist(density=True)
@@ -270,6 +291,14 @@ data[data['inter']]['cluster_kmeans_manual'].hist(density=True)
 data[~data['inter']]['cluster_kmeans_manual'].hist(density=True)
 
 #%%
+data[data['cluster_kmeans_manual'] == 0].to_csv("macro_cluster0-structural-major.csv", index=False)
+data[data['cluster_kmeans_manual'] == 1].to_csv("macro_cluster1-nonstructural-minor.csv", index=False)
+data[data['cluster_kmeans_manual'] == 2].to_csv("macro_cluster2-package.csv", index=False)
+
+
+#%%
+
+# Cells related to annotations study (old right now)
 annotation_cluster = data[data['cluster_kmeans_manual'] == 1].copy()
 annotation_cluster.shape
 
