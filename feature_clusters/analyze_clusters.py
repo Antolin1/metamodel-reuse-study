@@ -165,11 +165,13 @@ with open("metamodels.txt", "w") as f:
 #%%
 
 features = [c for c in data.columns if ('ADD' in c or 'CHANGE' in c or 'DELETE' in c or 'MOVE' in c) and 'EAnnotation' not in c]
+annotation_features = [c for c in data.columns if 'EAnnotation' in c]
 
 print(len(features))
 
 data["sum_changes"] = data[features].sum(axis=1)
-data["sum_changes"].describe()
+data["annotation_changes"] = data[annotation_features].sum(axis=1)
+data["all_changes"] = data["sum_changes"] + data["annotation_changes"]
 
 #%%
 
