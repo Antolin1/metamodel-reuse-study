@@ -1,3 +1,7 @@
+'''
+Group features at the macro/cluster level, and analyse their distribution
+'''
+
 #%%
 import pandas as pd
 import numpy as np

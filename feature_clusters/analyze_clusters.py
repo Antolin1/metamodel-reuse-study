@@ -104,10 +104,15 @@ plt.yscale('log')
 plt.show()
 
 #%%
-"""# Cluster analysis"""
 
+# Focus on changed copies
 data = data[data['affected_elements']>0]
 data
+
+#%%
+
+# export dataset ready for other analyses
+data.to_csv("stars-copies_with_changes.csv", index=False)
 
 #%%
 import xml.etree.ElementTree as ET

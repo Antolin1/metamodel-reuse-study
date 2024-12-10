@@ -35,9 +35,11 @@ public class ClusterFineGrainAnalysis {
 		//		doAnalysis("macro_cluster3-package-sample.csv", "all");
 
 		// fine-grain analysis of kmeans clusters
-		for (int c = 0; c < 10; c++) {
-			doAnalysis(String.format("kmeans-cluster%d-sample.csv", c), "all");
-		}
+		//		for (int c = 0; c < 10; c++) {
+		//			doAnalysis(String.format("kmeans-cluster%d-sample.csv", c), "all");
+		//		}
+		doAnalysis("structural-above-non-structural.csv", "all");
+		doAnalysis("structural-below-non-structural.csv", "all");
 
 		System.out.println("Done");
 	}
@@ -85,6 +87,8 @@ public class ClusterFineGrainAnalysis {
 							countFeatureDiff(diffCounts, d);
 						}
 					}
+					writer.println("Left size: " + mc.getLeftSize());
+					writer.println("Right size: " + mc.getRightSize());
 					writer.println("All diffs: " + sortMap(mc.getDiffCounts()));
 					writer.println("Fine diffs: " + sortMap(diffCounts));
 					writer.println();
