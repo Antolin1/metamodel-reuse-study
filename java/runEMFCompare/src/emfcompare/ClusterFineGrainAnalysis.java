@@ -38,8 +38,7 @@ public class ClusterFineGrainAnalysis {
 		//		for (int c = 0; c < 10; c++) {
 		//			doAnalysis(String.format("kmeans-cluster%d-sample.csv", c), "all");
 		//		}
-		doAnalysis("structural-above-non-structural.csv", "all");
-		doAnalysis("structural-below-non-structural.csv", "all");
+		doAnalysis("sample_diff_types.csv", "all");
 
 		System.out.println("Done");
 	}
