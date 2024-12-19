@@ -39,6 +39,9 @@ public class ClusterFineGrainAnalysis {
 		//			doAnalysis(String.format("kmeans-cluster%d-sample.csv", c), "all");
 		//		}
 		doAnalysis("sample_diff_types.csv", "all");
+		doAnalysis("add_delete_epackage.csv", "all");
+		doAnalysis("move_epackage_root_pkg.csv", "all");
+		doAnalysis("has_move_epackage.csv", "all");
 
 		System.out.println("Done");
 	}

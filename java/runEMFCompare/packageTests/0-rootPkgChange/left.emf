@@ -1,0 +1,6 @@
+@namespace(uri="comicshop", prefix="comicshop")
+package comicshop;
+
+class Shop {
+	attr String name;
+}

@@ -1,0 +1,6 @@
+@namespace(uri="other", prefix="other")
+package other;
+
+class Shop {
+	attr String name;
+}

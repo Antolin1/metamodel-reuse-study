@@ -1,0 +1,19 @@
+@namespace(uri="comicshop", prefix="comicshop")
+package comicshop;
+
+class Shop {
+	attr String name;
+}
+
+package comics {
+	package toys {
+		class PowerRanger {
+			attr String color;
+			attr String year;
+		}
+	}
+}
+
+package merchandising {
+	
+}
