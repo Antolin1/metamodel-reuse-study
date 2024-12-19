@@ -38,59 +38,36 @@ data.head(5)
 
 # %%
 
-# tag package root changes
-def has_root_package_change(row):
-    mandatory_root_package_changes = dt_features["AddDeleteRootPackage"]
-    extra_root_package_changes = dt_features["AddDeleteRootPackage-Extra"]
+# tag package changes
+def has_package_changes(row):
+    package_changes = dt_features["AddDeletePackage"]
+    move_package_contents = dt_features["MovePackageContents"]
 
-    # all mandatory changes need to be present
-    has_mandatory_changes = True
-    for f in mandatory_root_package_changes:
-        if (row[f] == 0):
-            has_mandatory_changes = False
-            break
-
-    # at least one extra change needs to be present
-    has_extra_changes = False
-    for f in extra_root_package_changes:
+    # at least one package change needs to be present
+    has_package_changes = False
+    for f in package_changes:
         if (row[f] > 0):
-            has_extra_changes = True
+            has_package_changes = True
             break
 
-    return has_mandatory_changes and has_extra_changes
+    if not has_package_changes:
+        return False
 
-data["type_AddDeleteRootPackage"] = data.apply(has_root_package_change, axis=1)
+    # at least one movement change needs to be present
+    has_movement_changes = False
+    for f in move_package_contents:
+        if (row[f] > 0):
+            has_movement_changes = True
+            break
+
+    return has_package_changes and has_movement_changes
+
+data["type_AddDeletePackage"] = data.apply(has_package_changes, axis=1)
 
 #%%
 
-# tag add-delete subpackage changes (not root ones)
-
-def has_subpackage_change(row):
-    mandatory_package_changes = dt_features["AddDeleteSubpackage"]
-    extra_package_changes = dt_features["AddDeleteRootPackage-Extra"]
-
-    # all mandatory changes need to be present
-    has_mandatory_changes = True
-    for f in mandatory_package_changes:
-        if (row[f] == 0):
-            has_mandatory_changes = False
-            break
-
-    # at least one extra change needs to be present
-    has_extra_changes = False
-    for f in extra_package_changes:
-        if (row[f] > 0):
-            has_extra_changes = True
-            break
-
-    return has_mandatory_changes and has_extra_changes
-
-data["type_AddDeleteSubpackage"] = data.apply(has_subpackage_change, axis=1)
-
-#%%
-
-# extra type "package" that combines all package changes
-data["type_Package"] = data["type_ChangePackage"] | data["type_AddDeleteRootPackage"] | data["type_AddDeleteSubpackage"]
+# extra type "package" that combines package change types
+data["type_Package"] = data["type_ChangePackage"] | data["type_AddDeletePackage"]
 
 #%%
 
@@ -98,9 +75,9 @@ data["type_Package"] = data["type_ChangePackage"] | data["type_AddDeleteRootPack
 def has_move_change(row):
     move_changes = dt_features["Move"]
 
-    # if there are not package changes, consider the extra move changes
-    if not row["type_AddDeleteRootPackage"] and not row["type_AddDeleteSubpackage"]:
-        move_changes = np.concatenate((move_changes, dt_features["AddDeleteRootPackage-Extra"]))
+    # if there are no package changes, consider the extra move changes
+    if not row["type_AddDeletePackage"]:
+        move_changes = np.concatenate((move_changes, dt_features["MovePackageContents"]))
 
     return row[move_changes].sum() > 0
 
@@ -113,8 +90,8 @@ def has_add_change(row):
     add_changes = dt_features["Add"]
 
     # if there are not subpackage changes, consider add package as well
-    if not row["type_AddDeleteSubpackage"]:
-        add_changes = np.concatenate((add_changes, ["ADD-EPackage"]))
+    if not row["type_AddDeletePackage"]:
+        add_changes = np.concatenate((add_changes, ["ADD-EPackage", "ADD-ResourceAttachment.EPackage"]))
 
     return row[add_changes].sum() > 0
 
@@ -123,8 +100,8 @@ def has_delete_change(row):
     delete_changes = dt_features["Delete"]
 
     # if there are not subpackage changes, consider delete package as well
-    if not row["type_AddDeleteSubpackage"]:
-        delete_changes = np.concatenate((delete_changes, ["DELETE-EPackage"]))
+    if not row["type_AddDeletePackage"]:
+        delete_changes = np.concatenate((delete_changes, ["DELETE-EPackage", "DELETE-ResourceAttachment.EPackage"]))
 
     return row[delete_changes].sum() > 0
 
@@ -142,8 +119,12 @@ data.to_csv("stars-copies_with_diff_types.csv", index=False)
 sample = data.sample(30)
 sample.to_csv("sample_diff_types.csv", index=False)
 
+# END OF SCRIPT
+
 
 #%%
+# Exploration/Study of package changes from here
+
 
 # Study "MOVE-EPackage" changes
 data["has_MoveEPackage"] = data["MOVE-EPackage"] > 0
@@ -214,3 +195,34 @@ data_pkg[has_column].value_counts().to_csv("has_package_columns_combinations_bin
 
 
 # %%
+def satisfies(row, has_features, has_not_features):
+    for f in has_features:
+        if row[f] == 0:
+            return False
+
+    for f in has_not_features:
+        if row[f] != 0:
+            return False
+
+    return True
+
+def df_satisfies(df, has_features, has_not_features):
+    return df[df.apply(satisfies, axis=1, args=(has_features, has_not_features))]
+
+
+# %%
+has = ["DELETE-ResourceAttachment.EPackage"]
+has_not = ["ADD-EPackage", "DELETE-EPackage", "MOVE-EPackage", "ADD-ResourceAttachment.EPackage"]
+
+only_root_delete = df_satisfies(data, has, has_not)
+only_root_delete.to_csv("only_root_delete.csv", index=False)
+
+print("Only root delete:", len(only_root_delete))
+print("Different star origins: ", len(only_root_delete["original_path"].unique()))
+only_root_delete["original_path"].value_counts()
+
+
+# %%
+has = ["DELETE-EPackage"]
+has_not = ["ADD-EPackage", "MOVE-EPackage", "ADD-ResourceAttachment.EPackage", "DELETE-ResourceAttachment.EPackage"]
+df_satisfies(data, has, has_not).to_csv("add_delete_epackage_root_delete.csv", index=False)
