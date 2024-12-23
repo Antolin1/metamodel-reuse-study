@@ -1,12 +1,11 @@
 import argparse
-import math
 import sqlite3
 from datetime import datetime
 
-import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
+from plotnine import *
 from tqdm import tqdm
 
 
@@ -39,18 +38,31 @@ def get_unique_repos(G, c):
 def histogram(G):
     ccs = [c for c in list(sorted(nx.connected_components(G), key=len, reverse=True)) if len(c) > 1]
     len_ccs = [len(c) for c in ccs]
-    plt.hist(len_ccs, bins=200, edgecolor='black')
-    plt.yscale('log')
+    data = pd.DataFrame({'ClusterSize': len_ccs})
 
-    # Adding titles and labels
-    plt.title('Cluster sizes histogram')
-    plt.xlabel('Cluster size')
-    plt.ylabel('Frequency')
+    # Create the plot
+    plot = (
+            ggplot(data, aes(x='ClusterSize')) +
+            geom_histogram(bins=200, color='black', fill='gray') +
+            scale_y_log10() +
+            labs(
+                title='Cluster sizes distribution',
+                x='Cluster size',
+                y='Frequency'
+            ) +
+            theme_minimal()
+            +
+    theme(
+        plot_title=element_text(size=16),  # Title font size
+        axis_title_x=element_text(size=14),  # X-axis label font size
+        axis_title_y=element_text(size=14),  # Y-axis label font size
+        axis_text_x=element_text(size=12),  # X-axis tick font size
+        axis_text_y=element_text(size=12)   # Y-axis tick font size
+    )
+    )
 
-    plt.savefig("histogram.pdf", format="pdf")
-
-    # Display the plot
-    plt.show()
+    # Save the plot as a PDF
+    plot.save("histogram.pdf", format="pdf")
 
     # Step 1: Calculate the median of the data
     median = np.median(len_ccs)
@@ -83,45 +95,26 @@ def most_duplicated(G, k=10):
 def statistics_amount_duplication(G):
 
     # count the number of nodes that have at least one edge divided by the total number of nodes
-    print(f"Duplicated files: {100 * len([n for n in G.nodes() if G.degree(n) > 0]) / len(G):.2f}")
+    print(f"Duplicated files (ST1): {100 * len([n for n in G.nodes() if G.degree(n) > 0]) / len(G):.2f}")
 
     # number of distinct meta-models
     ccs = [c for c in list(sorted(nx.connected_components(G), key=len, reverse=True))]
-    print(f"Number of distinct meta-models: {len(ccs)}")
+    # print(f"Number of distinct meta-models: {len(ccs)}")
 
     # number of total files
-    print(f"Number of total meta-models: {len(G)}")
+    # print(f"Number of total meta-models: {len(G)}")
 
     # ratio of distinct meta-models
-    print(f"Ratio distinct meta-models: {100*len(ccs)/len(G):.2f}")
+    print(f"Ratio distinct meta-models (ST2): {100*len(ccs)/len(G):.2f}")
 
 
-
-def compactness(G):
-    weights = [data['weight'] for u, v, data in G.edges(data=True)]
-
-    print(f'Mean weight: {np.mean(weights):.2f} +- {np.std(weights)}')
-    print(f'Median weight: {np.median(weights):.2f}')
-
-    plt.boxplot(weights)
-    plt.yscale('log')
-
-    # Adding titles and labels
-    plt.title('Histogram of weights')
-    plt.xlabel('Value')
-    plt.ylabel('Frequency')
-
-    # Display the plot
-    plt.show()
 
 
 def main(args):
     G = load_graph(args.db)
-
     statistics_amount_duplication(G)
     histogram(G)
     most_duplicated(G)
-    # compactness(G)
 
 
 if __name__ == '__main__':

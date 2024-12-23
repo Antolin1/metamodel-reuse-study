@@ -19,9 +19,7 @@ def main(args):
         user = r.split('/')[0]
         users[user] += 1
 
-    print("Top 10 users with the largest number of repositories")
-    for user in sorted(users, key=users.get, reverse=True)[:10]:
-        print(f"{user} {users[user]}")
+    print(f"Top 5 users with the largest number of repositories: {sorted(users, key=users.get, reverse=True)[:5]}")
 
     print(f"Number of users: {len(users)}")
 
@@ -33,8 +31,8 @@ def main(args):
     for n in G:
         repositories[G.nodes[n]['user'] + '/' + G.nodes[n]['repo']] += 1
 
-    print("Top 3 repositories with the largest number of meta-models")
-    for repo in sorted(repositories, key=repositories.get, reverse=True)[:3]:
+    print("Top 5 repositories with the largest number of meta-models")
+    for repo in sorted(repositories, key=repositories.get, reverse=True)[:5]:
         print(f"{repo} {repositories[repo]}")
 
 

@@ -2,7 +2,12 @@
 
 ## Requirements
 
-TODO
+Set-up conda environment:
+```shell
+conda env create -f environment.yml
+conda activate metamodel-reuse-study
+```
+Java and so on, TODO.
 
 ## Download and process data
 
@@ -37,9 +42,33 @@ python compute_duplicates.py
 
 Finally run the EMF compare of `java` folder. To do this, you must load the target configuration present in the `.target` file (open in Ecilpse > Load Target Platform on top-right).
 
+## Basic statistics
 
-## Analysis of the categories at intra-level
+The following command compute basic statistics of the dataset, such as the number of meta-models, the number of repositories,
+the users with the most meta-models, etc.
+```shell
+python dataset_statistics.py
+```
 
+
+## Duplication distribution
+
+The following command computes the distribution of duplication in the dataset. Particularly, it shows
+the ST1 and ST2 statistics of the duplication network, plots the distribution of the duplication cluster sizes, and prints
+the top-10 most duplicated meta-models and most reused meta-models.
+
+```shell
+python analysis_duplication.py
+```
+
+## Intra-repository duplication
+
+The following script computes the ST1 distribution over the repositories that show intra-repository duplication.
+```shell
+python analysis_intra.py
+```
+
+To display the label distribution, execute the following command:
 ```shell
 python categories_intra/analysis_intra_labels.py
 ```

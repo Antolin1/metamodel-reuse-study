@@ -242,3 +242,6 @@ local.properties
 cluster_stars.csv
 cluster_stars_with_features.csv
 /intra_bar_plot.pdf
+/intra_st1.pdf
+/intra_st2.pdf
+/boxplot_intra.pdf

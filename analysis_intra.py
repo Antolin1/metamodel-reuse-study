@@ -2,11 +2,11 @@ import argparse
 import json
 import random
 
-import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+from plotnine import *
 
 from analysis_duplication import load_graph
 
@@ -34,60 +34,74 @@ def intra_project_reuse(G, args):
     result = {}
     scores = []
     files = {}
-    diameters = []
+    st2 = []
+    st1 = []
     for repo in tqdm(repos, total=len(repos)):
         view = nx.subgraph_view(G, filter_node=lambda n: G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == repo)
         ccs = [c for c in list(sorted(nx.connected_components(view), key=len, reverse=True))]
         score = sum([len(c) - 1 for c in ccs])
         result[repo] = score
+        if score > 0:
+            st2.append(100*len(ccs)/len(view))
+            st1.append(100*len([n for n in view.nodes() if view.degree(n) > 0]) / len(view))
         files[repo] = [[G.nodes[n]['local_path'] for n in c] for c in ccs if len(c) > 1]
         scores.append(score)
-        if len(view.edges) >= 0:
-            ws = [data['weight'] for _, _, data in view.edges(data=True) if data['weight'] != -1]
-            if len(ws) == 0:
-                continue
-            diameters += ws
 
     print(f'Proportion intra (repos that contain duplication) {len([s for s in scores if s > 0]) / len(scores):.4f}')
     print(f'Number repos intra {len([s for s in scores if s > 0])}')
     print(f'Number repos {len(repos)}')
-    # top 10 repositories with the largest score
-    top_repos = sorted(result, key=result.get, reverse=True)[:10]
-    for repo in top_repos:
-        print(f'{repo} {result[repo]}')
-
-    plt.boxplot(diameters)
-
-    # Adding titles and labels
-    plt.title('Histogram of Sample Data')
-    plt.xlabel('Diameter')
-    plt.ylabel('Frequency')
-    plt.yscale('log')
-    plt.show()
-
-    print(f'Mean diameter: {np.mean(diameters):.2f} +- {np.std(diameters)}')
-    # median and median absolute deviation
-    print(f'Median diameter: {np.median(diameters):.2f}')
-
 
     # blox-plot scores
-    plt.boxplot([s for s in scores if s > 0], vert=False)
-    plt.xscale('log')
-    plt.xlabel('# Duplicated meta-models')
-    plt.title('Distribution of # duplicated meta-models')
-    plt.savefig("boxplot.pdf", format="pdf")
-    plt.show()
+    data = pd.DataFrame({'st1': st1})
 
-    print(f'Mean score: {np.mean([s for s in scores if s > 0]):.2f} +- {np.std([s for s in scores if s > 0])}')
-    print(f'Median score: {np.median([s for s in scores if s > 0]):.2f}')
-    data = np.asarray([s for s in scores if s > 0])
-    # Step 1: Calculate the median of the data
-    median = np.median(data)
-    # Step 2: Calculate the absolute deviations from the median
-    absolute_deviations = np.abs(data - median)
-    # Step 3: Calculate the median of the absolute deviations (MAD)
-    mad = np.median(absolute_deviations)
-    print(f'Median absolute deviation: {mad:.2f}')
+    # Create the plot
+    plot = (
+            ggplot(data, aes(y='st1')) +  # Use 'y' for horizontal boxplot
+            geom_boxplot() +
+            # scale_y_log10() +  # Log scale for x-axis
+            labs(
+                title='Distribution of ST1 statistic across repositories',
+                y='ST1 statistic',
+                x=''  # No y-axis label since it's horizontal
+            ) +
+            theme_minimal() +
+            theme(
+                plot_title=element_text(size=16),  # Title font size
+                axis_title_x=element_text(size=14),  # X-axis label font size
+                axis_text_y=element_blank()
+            )
+            + coord_flip()
+    )
+
+    plot.save("intra_st1.pdf", format="pdf")
+
+    data = pd.DataFrame({'st2': st2})
+
+    # Create the plot
+    plot = (
+            ggplot(data, aes(y='st2')) +  # Use 'y' for horizontal boxplot
+            geom_boxplot() +
+            # scale_y_log10() +  # Log scale for x-axis
+            labs(
+                title='Distribution of ST2 statistic across repositories',
+                y='ST2 statistic',
+                x=''  # No y-axis label since it's horizontal
+            ) +
+            theme_minimal() +
+            theme(
+                plot_title=element_text(size=16),  # Title font size
+                axis_title_x=element_text(size=14),  # X-axis label font size
+                axis_text_y=element_blank()
+            )
+            + coord_flip()
+    )
+
+    plot.save("intra_st2.pdf", format="pdf")
+
+
+
+    print(f'Mean score ST1: {np.mean(st1):.2f} +- {np.std(st1)}')
+    print(f'Mean score ST2: {np.mean(st2):.2f} +- {np.std(st2)}')
 
     # sample repos
     if args.sample:
