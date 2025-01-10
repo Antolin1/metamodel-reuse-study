@@ -70,5 +70,12 @@ python analysis_intra.py
 
 To display the label distribution, execute the following command:
 ```shell
-python categories_intra/analysis_intra_labels.py
+python categories_intra_inter/analysis_labels.py --file categories_intra_inter/samples_intra_labels.csv --type intra
+```
+
+## Inter-repository duplication
+
+To display the label distribution, execute the following command:
+```shell
+python categories_intra_inter/analysis_labels.py --file categories_intra_inter/samples_inter_labels.csv --type inter
 ```
