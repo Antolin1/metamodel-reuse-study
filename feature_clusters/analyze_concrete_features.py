@@ -31,6 +31,8 @@ data["sum_changed_features"] = data[features].sum(axis=1)
 data_no_changes = data[data["sum_changed_features"] == 0]
 data = data[data["sum_changed_features"] > 0].copy()
 
+data.to_csv('concrete_features-duplicates_with_changes.csv', index=False)
+
 print("No changes: ", data_no_changes.shape)
 print("Changes: ", data.shape)
 
