@@ -374,7 +374,10 @@ public class MetamodelComparison {
 	}
 
 	protected boolean isSubordinateType(Diff d) {
-		if (isAnnotationRelated(d)) {
+		if (useAllTypes) {
+			return false;
+		}
+		else if (isAnnotationRelated(d)) {
 			return false;
 		}
 		if (isGenericsRelated(d)) {
@@ -384,9 +387,7 @@ public class MetamodelComparison {
 	}
 
 	protected boolean isSubordinateType(Match m) {
-		if (useAllTypes) {
-			return false;
-		}
+
 		switch (getAffectedType(m).getName()) {
 			case "EParameter":
 			case "EStringToStringMapEntry":
