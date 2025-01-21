@@ -12,10 +12,7 @@ No feature filtering is done in this script.
 #%%
 import pandas as pd
 
-data = pd.read_csv('cluster_stars_with_concrete_features.csv')
-data['repo_original'] = data['original_path'].str.split('$').str[0] + '/' + data['original_path'].str.split('$').str[1]
-data['repo_duplicate'] = data['duplicate_path'].str.split('$').str[0] + '/' + data['duplicate_path'].str.split('$').str[1]
-data['inter'] = data['repo_original'] != data['repo_duplicate']
+data = pd.read_csv('cluster_stars_with_concrete_features-intra.csv')
 data
 
 #%%
@@ -31,8 +28,6 @@ data["sum_changed_features"] = data[features].sum(axis=1)
 data_no_changes = data[data["sum_changed_features"] == 0]
 print("No changes: ", data_no_changes.shape)
 
-data.to_csv('cluster_stars_with_concrete_features-inter.csv', index=False)
-
 #%%
 
 # rank features by frequency
@@ -41,4 +36,4 @@ feature_counts.sort_values(ascending=False, inplace=True)
 
 feature_counts = feature_counts.reset_index()
 feature_counts.columns = ['feature', 'count']
-feature_counts.to_csv('concrete_feature_counts.csv', index=False)
+feature_counts.to_csv('concrete_feature_counts-intra.csv', index=False)

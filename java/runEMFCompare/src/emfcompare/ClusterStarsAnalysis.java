@@ -19,7 +19,7 @@ public class ClusterStarsAnalysis {
 	public static void main(String[] args) {
 		String rootFolder = "../../";
 		String metamodelsFolder = rootFolder + "metamodels/";
-		String inputCsv = rootFolder + "feature_clusters/cluster_stars.csv";
+		String inputCsv = rootFolder + "cluster_stars.csv";
 		String outputCsv = rootFolder + "feature_clusters/cluster_stars_with_features.csv";
 
 		String[] metadata = { "cluster", "original", "original_path", "duplicate", "duplicate_path", "affected_elements" };

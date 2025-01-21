@@ -17,7 +17,7 @@ public class ClusterStarsAnalysisGetConcreteFeatures {
 	public static void main(String[] args) {
 		String rootFolder = "../../";
 		String metamodelsFolder = rootFolder + "metamodels/";
-		String csvFile = rootFolder + "feature_clusters/cluster_stars.csv";
+		String csvFile = rootFolder + "cluster_stars.csv";
 
 		Set<String> features = new TreeSet<>();
 
