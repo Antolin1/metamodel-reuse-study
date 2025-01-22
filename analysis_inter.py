@@ -1,5 +1,4 @@
 import argparse
-import json
 import math
 import random
 
@@ -7,6 +6,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
+from plotnine import *
 from tqdm import tqdm
 
 from analysis_duplication import load_graph
@@ -63,14 +63,6 @@ def normalized_scores(G):
 
 
 def amount_inter(G):
-    cont = 0
-    for n in G:
-        for m in nx.neighbors(G, n):
-            if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] != G.nodes[m]['user'] + '/' + G.nodes[m]['repo']:
-                cont += 1
-                break
-    print(f'Proportion inter (metamodels that can be found in another repo) {cont / len(G):.4f}')
-    print(f'Number of inter {cont} out of {len(G)}')
 
     # proportion of repositories that copy metamodels from other repositories
     repos = set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for n in G])
@@ -88,63 +80,40 @@ def amount_inter(G):
     print(f'Proportion inter (repositories that copy metamodels from other repositories) {cont / len(repos):.4f}')
     print(f'Number of inter {cont} out of {len(repos)}')
 
-    # TODO: check this
     nodes_inter = []
-    for r in repos_inter:
-        nodes = [n for n in G if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == repo]
+    for r in tqdm(repos_inter):
+        nodes = [n for n in G if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == r]
         node_inter = 0
         for n in nodes:
             neig = [m for m in nx.neighbors(G, n) if G.nodes[m]['user'] + '/' + G.nodes[m]['repo'] != r]
             if len(neig) > 0:
                 node_inter += 1
-                continue
-        nodes_inter.append(node_inter)
-    print(f'Mean proportion of inter-metamodels per repository: {np.mean(nodes_inter):.2f} +- {np.std(nodes_inter):.2f}')
-
-
-    # proportion of repositories of one user that copy metamodels from other repositories different from the user
-    users = set([G.nodes[n]['user'] for n in G])
-    cont = 0
-    for user in tqdm(users):
-        nodes = [n for n in G if G.nodes[n]['user'] == user]
-        for n in nodes:
-            neig = [m for m in nx.neighbors(G, n) if G.nodes[m]['user'] != user]
-            if len(neig) > 0:
-                cont += 1
-                break
-    print(f'Proportion inter (repositories that copy metamodels from other repositories of different users) {cont / len(users):.4f}')
-
-    # boxplot with number of inter-metamodels per repository
-    repos = set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for n in G])
-    inter = []
-    for repo in tqdm(repos):
-        nodes = [n for n in G if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == repo]
-        cont = 0
-        for n in nodes:
-            neig = [m for m in nx.neighbors(G, n) if G.nodes[m]['user'] + '/' + G.nodes[m]['repo'] != repo]
-            if len(neig) > 0:
-                cont += 1
-        inter.append(cont)
-
-    inter = [i for i in inter if i > 0]
-
-    print(f'Median score: {np.median([s for s in inter if s > 0]):.2f}')
-    data = np.asarray([s for s in inter if s > 0])
-    # Step 1: Calculate the median of the data
-    median = np.median(data)
-    # Step 2: Calculate the absolute deviations from the median
-    absolute_deviations = np.abs(data - median)
-    # Step 3: Calculate the median of the absolute deviations (MAD)
-    mad = np.median(absolute_deviations)
-    print(f'Median absolute deviation: {mad:.2f}')
+        nodes_inter.append(node_inter / len(nodes))
+    print(f'Mean proportion of inter-metamodels per repository: {np.mean(nodes_inter):.4f} +- {np.std(nodes_inter):.4f}')
 
     # blox-plot scores
-    plt.boxplot([s for s in inter if s > 0], vert=False)
-    plt.xscale('log')
-    plt.xlabel('# Inter-duplicated meta-models')
-    plt.title('Distribution of # inter-duplicated meta-models')
-    plt.savefig("boxplot_inter.pdf", format="pdf")
-    plt.show()
+    data = pd.DataFrame({'st1': nodes_inter})
+
+    # Create the plot
+    plot = (
+            ggplot(data, aes(y='st1')) +  # Use 'y' for horizontal boxplot
+            geom_boxplot() +
+            # scale_y_log10() +  # Log scale for x-axis
+            labs(
+                title='Distribution of $InterDup\mathcal{M}_r$',
+                y='$InterDup\mathcal{M}_r$',
+                x=''  # No y-axis label since it's horizontal
+            ) +
+            theme_minimal() +
+            theme(
+                plot_title=element_text(size=16),  # Title font size
+                axis_title_x=element_text(size=14),  # X-axis label font size
+                axis_text_y=element_blank()
+            )
+            + coord_flip()
+    )
+
+    plot.save("inter_st1.pdf", format="pdf")
 
 
 

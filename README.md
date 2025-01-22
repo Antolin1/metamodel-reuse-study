@@ -75,6 +75,11 @@ python categories_intra_inter/analysis_labels.py --file categories_intra_inter/s
 
 ## Inter-repository duplication
 
+The following script computes the $InterDup\mathcal{M}_r$ distribution over the repositories that show inter-repository duplication.
+```shell
+python analysis_intra.py
+```
+
 To display the label distribution, execute the following command:
 ```shell
 python categories_intra_inter/analysis_labels.py --file categories_intra_inter/samples_inter_labels.csv --type inter
