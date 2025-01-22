@@ -4,23 +4,22 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
-public class ClusterStarsAnalysisGetFeatures {
+public class ClusterStarsAnalysisGetConcreteFeatures {
 
 	public static void main(String[] args) {
 		String rootFolder = "../../";
 		String metamodelsFolder = rootFolder + "metamodels/";
 		String csvFile = rootFolder + "cluster_stars.csv";
 
-		Set<String> features = new HashSet<>();
+		Set<String> features = new TreeSet<>();
 
 		int cluster = 0;
 		try (Reader reader = new FileReader(csvFile);
@@ -36,6 +35,7 @@ public class ClusterStarsAnalysisGetFeatures {
 
 				try {
 					MetamodelComparison mc = new MetamodelComparison();
+					mc.setUseAllTypes(true);
 					// left takes the new model role, so right is the "original"
 					mc.compare(
 							metamodelsFolder + csvRecord.get("duplicate_path"),
@@ -43,7 +43,7 @@ public class ClusterStarsAnalysisGetFeatures {
 					mc.dispose();
 
 					comparisons.add(mc);
-					features.addAll(mc.getDiffCounts().keySet());
+					features.addAll(FeaturesUtil.getConcreteFeatures(mc));
 				}
 				catch (Exception e) {
 					System.out.println(csvRecord.get("duplicate_path"));
@@ -56,8 +56,6 @@ public class ClusterStarsAnalysisGetFeatures {
 			e.printStackTrace();
 		}
 
-		List<String> featuresList = new ArrayList<>(features);
-		Collections.sort(featuresList);
-		System.out.println(featuresList);
+		System.out.println(features);
 	}
 }

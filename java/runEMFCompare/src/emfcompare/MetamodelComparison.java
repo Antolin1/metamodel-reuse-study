@@ -51,6 +51,11 @@ public class MetamodelComparison {
 	protected Comparison comparison;
 	protected int leftSize, rightSize;
 
+	/**
+	 * Disable cutoff and subordinate types
+	 */
+	protected boolean useAllTypes = false;
+
 	protected ResourceSet leftRS, rightRS;
 
 	protected Map<String, Integer> diffCounts = new HashMap<>();
@@ -369,7 +374,10 @@ public class MetamodelComparison {
 	}
 
 	protected boolean isSubordinateType(Diff d) {
-		if (isAnnotationRelated(d)) {
+		if (useAllTypes) {
+			return false;
+		}
+		else if (isAnnotationRelated(d)) {
 			return false;
 		}
 		if (isGenericsRelated(d)) {
@@ -379,6 +387,7 @@ public class MetamodelComparison {
 	}
 
 	protected boolean isSubordinateType(Match m) {
+
 		switch (getAffectedType(m).getName()) {
 			case "EParameter":
 			case "EStringToStringMapEntry":
@@ -395,15 +404,18 @@ public class MetamodelComparison {
 	 * below is a subordinate type)
 	 */
 	protected boolean isCutoffType(Diff d) {
-		if (isAnnotationRelated(d)) {
+		if (useAllTypes) {
+			return false;
+		}
+		else if (isAnnotationRelated(d)) {
 			return false;
 		}
 		switch (getAffectedType(d).getName()) {
-		case "EOperation":
-		case "EAnnotation":
-			return true;
-		default:
-			return false;
+			case "EOperation":
+			case "EAnnotation":
+				return true;
+			default:
+				return false;
 		}
 	}
 
@@ -555,5 +567,12 @@ public class MetamodelComparison {
 
 	public List<Diff> getOtherDiffs() {
 		return otherDiffs;
+	}
+
+	/**
+	 * Disable cutoff and subordinate types
+	 */
+	public void setUseAllTypes(boolean useAllTypes) {
+		this.useAllTypes = useAllTypes;
 	}
 }

@@ -240,11 +240,14 @@ local.properties
 /boxplot_inter.pdf
 /histogram_inter.pdf
 cluster_stars.csv
-cluster_stars_with_features.csv
+cluster_stars-intra.csv
 /intra_bar_plot.pdf
 /intra_st1.pdf
 /intra_st2.pdf
 /boxplot_intra.pdf
+
 /intra_duplicated_files.pdf
 /boxplot_inter_repos.pdf
 /affected_elements_plot.pdf
+
+/inter_bar_plot.pdf
