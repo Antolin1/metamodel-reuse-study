@@ -34,16 +34,18 @@ def intra_project_reuse(G, args):
     result = {}
     scores = []
     files = {}
-    st2 = []
     st1 = []
+    num_files = []
+    duplicated_files = []
     for repo in tqdm(repos, total=len(repos)):
         view = nx.subgraph_view(G, filter_node=lambda n: G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == repo)
         ccs = [c for c in list(sorted(nx.connected_components(view), key=len, reverse=True))]
         score = sum([len(c) - 1 for c in ccs])
         result[repo] = score
         if score > 0:
-            st2.append(100*len(ccs)/len(view))
             st1.append(100*len([n for n in view.nodes() if view.degree(n) > 0]) / len(view))
+            num_files.append(len(view.nodes()))
+            duplicated_files.append(len([n for n in view.nodes() if view.degree(n) > 0]))
         files[repo] = [[G.nodes[n]['local_path'] for n in c] for c in ccs if len(c) > 1]
         scores.append(score)
 
@@ -60,8 +62,8 @@ def intra_project_reuse(G, args):
             geom_boxplot() +
             # scale_y_log10() +  # Log scale for x-axis
             labs(
-                title='Distribution of ST1 statistic across repositories',
-                y='ST1 statistic',
+                title='Distribution of $Dup\mathcal{M}_r$',
+                y='$Dup\mathcal{M}_r$',
                 x=''  # No y-axis label since it's horizontal
             ) +
             theme_minimal() +
@@ -75,33 +77,10 @@ def intra_project_reuse(G, args):
 
     plot.save("intra_st1.pdf", format="pdf")
 
-    data = pd.DataFrame({'st2': st2})
-
-    # Create the plot
-    plot = (
-            ggplot(data, aes(y='st2')) +  # Use 'y' for horizontal boxplot
-            geom_boxplot() +
-            # scale_y_log10() +  # Log scale for x-axis
-            labs(
-                title='Distribution of ST2 statistic across repositories',
-                y='ST2 statistic',
-                x=''  # No y-axis label since it's horizontal
-            ) +
-            theme_minimal() +
-            theme(
-                plot_title=element_text(size=16),  # Title font size
-                axis_title_x=element_text(size=14),  # X-axis label font size
-                axis_text_y=element_blank()
-            )
-            + coord_flip()
-    )
-
-    plot.save("intra_st2.pdf", format="pdf")
-
-
 
     print(f'Mean score ST1: {np.mean(st1):.2f} +- {np.std(st1)}')
-    print(f'Mean score ST2: {np.mean(st2):.2f} +- {np.std(st2)}')
+    print(f'Median score ST1: {np.median(st1):.2f}')
+
 
     # sample repos
     if args.sample:

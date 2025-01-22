@@ -63,7 +63,7 @@ python analysis_duplication.py
 
 ## Intra-repository duplication
 
-The following script computes the ST1 distribution over the repositories that show intra-repository duplication.
+The following script computes the $Dup\mathcal{M}_r$ distribution over the repositories that show intra-repository duplication.
 ```shell
 python analysis_intra.py
 ```
@@ -71,4 +71,16 @@ python analysis_intra.py
 To display the label distribution, execute the following command:
 ```shell
 python categories_intra/analysis_intra_labels.py
+```
+
+## Inter-repository duplication
+
+TODO
+
+## Meta-model changes
+
+To run the analysis of meta-model changes, execute the following command:
+
+```shell
+python metamodel_changes_analysis/analysis.py
 ```

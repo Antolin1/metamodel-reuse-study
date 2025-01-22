@@ -245,3 +245,6 @@ cluster_stars_with_features.csv
 /intra_st1.pdf
 /intra_st2.pdf
 /boxplot_intra.pdf
+/intra_duplicated_files.pdf
+/boxplot_inter_repos.pdf
+/affected_elements_plot.pdf

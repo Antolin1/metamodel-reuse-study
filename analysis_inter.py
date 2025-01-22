@@ -75,15 +75,32 @@ def amount_inter(G):
     # proportion of repositories that copy metamodels from other repositories
     repos = set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for n in G])
     cont = 0
+    repos_inter = []
     for repo in tqdm(repos):
         nodes = [n for n in G if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == repo]
         for n in nodes:
             neig = [m for m in nx.neighbors(G, n) if G.nodes[m]['user'] + '/' + G.nodes[m]['repo'] != repo]
             if len(neig) > 0:
                 cont += 1
+                repos_inter.append(repo)
                 break
+    repos_inter = list(set(repos_inter))
     print(f'Proportion inter (repositories that copy metamodels from other repositories) {cont / len(repos):.4f}')
     print(f'Number of inter {cont} out of {len(repos)}')
+
+    # TODO: check this
+    nodes_inter = []
+    for r in repos_inter:
+        nodes = [n for n in G if G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] == repo]
+        node_inter = 0
+        for n in nodes:
+            neig = [m for m in nx.neighbors(G, n) if G.nodes[m]['user'] + '/' + G.nodes[m]['repo'] != r]
+            if len(neig) > 0:
+                node_inter += 1
+                continue
+        nodes_inter.append(node_inter)
+    print(f'Mean proportion of inter-metamodels per repository: {np.mean(nodes_inter):.2f} +- {np.std(nodes_inter):.2f}')
+
 
     # proportion of repositories of one user that copy metamodels from other repositories different from the user
     users = set([G.nodes[n]['user'] for n in G])
@@ -233,7 +250,7 @@ def main(args):
     random.seed(123)
     G = load_graph(args.db)
     # histogram(G)
-    # amount_inter(G)
+    amount_inter(G)
     # distances_inter_vs_intra(G)
     # normalized_scores(G)
     if args.sample:
