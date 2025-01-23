@@ -241,6 +241,7 @@ local.properties
 /histogram_inter.pdf
 cluster_stars.csv
 cluster_stars-intra.csv
+metamodel_metrics.csv
 /intra_bar_plot.pdf
 /intra_st1.pdf
 /intra_st2.pdf
