@@ -39,51 +39,72 @@ public class ToolEvaluationPositives {
 			e.printStackTrace();
 		}
 
+		List<MetamodelComparison> distantComparisons = new ArrayList<>();
+		System.out.println("representative,most_distant,duplicate_detector");
 		for (Entry<Integer, List<String>> entry : clusters.entrySet()) {
-			System.out.println("*********************************************");
-			System.out.println("Cluster " + entry.getKey());
 
-			List<List<String>> pairs = getAllPairs(entry.getValue());
+			List<String> metamodels = entry.getValue();
+			String representative = metamodels.get(0);
 
-			for (List<String> pair : pairs) {
-				String path = pair.get(0);
-				String otherPath = pair.get(1);
+			String mostDistantMM = "";
+			double maxDistance = -1.0;
+			MetamodelComparison mostDistantComparison = null;
+
+			for (int mm = 1; mm < metamodels.size(); mm++) {
+				String otherMM = metamodels.get(mm);
 				MetamodelComparison mc = new MetamodelComparison();
-				mc.compare(rootFolder + path, rootFolder + otherPath);
-				System.out.println(path);
-				System.out.println(otherPath);
-				System.out.println("#elems left: " + mc.getLeftSize());
-				System.out.println("#elems right: " + mc.getRightSize());
-				System.out.println("#diffs: " + mc.getNumberOfDifferences());
-				System.out.println("#affected elems: " + mc.getNumberOfAffectedElements());
+				mc.compare(rootFolder + representative, rootFolder + otherMM);
 
-				Map<String, Integer> diffCounts = mc.getDiffCounts();
-
-				List<String> sortedKeys = new ArrayList<>(diffCounts.keySet());
-				Collections.sort(sortedKeys);
-
-				// Print the results
-				for (String key : sortedKeys) {
-					System.out.println(key + ": " + diffCounts.get(key));
+				double distance = getDistance(mc);
+				if (distance > maxDistance) {
+					mostDistantMM = otherMM;
+					maxDistance = distance;
+					mostDistantComparison = mc;
 				}
 
 				mc.dispose();
 			}
+			distantComparisons.add(mostDistantComparison);
+
+			// "1" means the detector identified the other mm as a duplicate
+			System.out.printf("%s,%s,%d\n", representative, mostDistantMM, 1);
 		}
-	}
 
-	public static List<List<String>> getAllPairs(List<String> elements) {
-		List<List<String>> pairs = new ArrayList<>();
+		System.out.println();
+		System.out.println("************** Comparisons ****************");
 
-		for (int i = 0; i < elements.size(); i++) {
-			for (int j = i + 1; j < elements.size(); j++) {
-				List<String> pair = new ArrayList<>();
-				pair.add(elements.get(i));
-				pair.add(elements.get(j));
-				pairs.add(pair);
+		int cluster = 0;
+		for (MetamodelComparison mc : distantComparisons) {
+			System.out.println("\nCluster: " + cluster);
+			cluster++;
+
+			System.out.println("Representative: " + mc.getLeftPath());
+			System.out.println("Most distant  : " + mc.getRightPath());
+
+			System.out.println("#elems left: " + mc.getLeftSize());
+			System.out.println("#elems right: " + mc.getRightSize());
+			System.out.println("#diffs: " + mc.getNumberOfDifferences());
+			System.out.println("#affected elems: " + mc.getNumberOfAffectedElements());
+			System.out.println("distance:" + getDistance(mc));
+
+			Map<String, Integer> diffCounts = mc.getDiffCounts();
+
+			List<String> sortedKeys = new ArrayList<>(diffCounts.keySet());
+			Collections.sort(sortedKeys);
+
+			System.out.println("Counts:");
+			for (String key : sortedKeys) {
+				System.out.println(key + ": " + diffCounts.get(key));
 			}
-		}
 
-		return pairs;
+			System.out.println();
+			System.out.println("Plain: " + FeaturesUtil.getPlainFeatures(mc));
+			System.out.println("Concrete: " + FeaturesUtil.getConcreteFeatures(mc));
+		}
 	}
+
+	public static double getDistance(MetamodelComparison mc) {
+		return (double) mc.getNumberOfAffectedElements() / (double) (mc.getLeftSize() + mc.getRightSize());
+	}
+
 }

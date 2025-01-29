@@ -32,11 +32,13 @@ public class ToolEvaluationNegatives {
 			e.printStackTrace();
 		}
 		
-		Map<String, MetamodelComparison> closerComparisons = new HashMap<>();
+		Map<String, MetamodelComparison> closestComparisons = new HashMap<>();
 
+		System.out.println("representative,closest,duplicate_detector");
 		for (String metamodel : metamodels) {
-			int minAffectedElements = Integer.MAX_VALUE;
-			MetamodelComparison closerComparison = null;
+			double minDistance = Double.MAX_VALUE;
+			MetamodelComparison closestComparison = null;
+			String closestMM = "";
 			for (String otherMetamodel : metamodels) {
 				if (metamodel.equals(otherMetamodel)) {
 					continue;
@@ -45,28 +47,34 @@ public class ToolEvaluationNegatives {
 				mc.compare(rootFolder + metamodel, rootFolder + otherMetamodel);
 				mc.dispose();
 
-				if (mc.getNumberOfAffectedElements() < minAffectedElements) {
-					minAffectedElements = mc.getNumberOfAffectedElements();
-					closerComparison = mc;
+				double distance = getDistance(mc);
+				if (distance < minDistance) {
+					minDistance = distance;
+					closestComparison = mc;
+					closestMM = otherMetamodel;
 				}
 			}
-			closerComparisons.put(metamodel, closerComparison);
+			closestComparisons.put(metamodel, closestComparison);
+
+			// "0" means the detector identified the other mm as a duplicate
+			System.out.printf("%s,%s,%d\n", metamodel, closestMM, 0);
 		}
 
 		int cluster = 0;
 		for (String metamodel : metamodels) {
-			MetamodelComparison mc = closerComparisons.get(metamodel);
+			MetamodelComparison mc = closestComparisons.get(metamodel);
 			
 			System.out.println("********************************************");
 			System.out.println("Cluster: " + cluster);
 			cluster++;
-			System.out.println("Metamodel: " + metamodel);
-			System.out.println("Closer metamodel: " + mc.getRightPath());
-			
+			System.out.println("Metamodel: " + mc.getLeftPath());
+			System.out.println("Closest  : " + mc.getRightPath());
+
 			System.out.println("#elems left: " + mc.getLeftSize());
 			System.out.println("#elems right: " + mc.getRightSize());
 			System.out.println("#diffs: " + mc.getNumberOfDifferences());
 			System.out.println("#affected elems: " + mc.getNumberOfAffectedElements());
+			System.out.println("distance:" + getDistance(mc));
 
 			Map<String, Integer> diffCounts = mc.getDiffCounts();
 
@@ -77,7 +85,11 @@ public class ToolEvaluationNegatives {
 			for (String key : sortedKeys) {
 				System.out.println(key + ": " + diffCounts.get(key));
 			}
+			System.out.println();
 		}
 	}
 
+	public static double getDistance(MetamodelComparison mc) {
+		return (double) mc.getNumberOfAffectedElements() / (double) (mc.getLeftSize() + mc.getRightSize());
+	}
 }
