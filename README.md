@@ -33,7 +33,7 @@ python download_metadata.py
 
 Extract content of Ecore files and compute duplicates using Allamanis's approach:
 ```shell
-python extract_conteps.py
+python extract_concepts.py
 python compute_duplicates.py
 ```
 
@@ -77,7 +77,7 @@ python categories_intra_inter/analysis_labels.py --file categories_intra_inter/s
 
 The following script computes the $InterDup\mathcal{M}_r$ distribution over the repositories that show inter-repository duplication.
 ```shell
-python analysis_intra.py
+python analysis_inter.py
 ```
 
 To display the label distribution, execute the following command:

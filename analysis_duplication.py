@@ -14,7 +14,7 @@ def load_graph(db):
     query = f'SELECT id, local_path, user, repo, first_commit FROM metamodels'
     df = pd.read_sql_query(query, conn)
     vertices = df.to_records(index=False).tolist()
-    query = f'SELECT id, m1, m2, distance FROM duplicates'
+    query = f'SELECT id, m1, m2 FROM duplicates'
     df = pd.read_sql_query(query, conn)
     edges = df.to_records(index=False).tolist()
 
@@ -28,7 +28,7 @@ def load_graph(db):
             continue
         if edge[2] not in G.nodes():
             continue
-        G.add_edge(edge[1], edge[2], weight=edge[3])
+        G.add_edge(edge[1], edge[2])
     return G
 
 def get_unique_repos(G, c):
