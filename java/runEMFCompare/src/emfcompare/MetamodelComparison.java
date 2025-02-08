@@ -35,7 +35,6 @@ import org.eclipse.emf.compare.scope.IComparisonScope;
 import org.eclipse.emf.compare.utils.UseIdentifiers;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
-import org.eclipse.emf.ecore.EGenericType;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.ETypedElement;
@@ -530,10 +529,8 @@ public class MetamodelComparison {
 		Iterator<EObject> allContents = EcoreUtil.getAllContents(resource.getContents(), false);
 
 		while (allContents.hasNext()) {
-			EObject elem = allContents.next();
-			if (!(elem instanceof EGenericType)) {
-				count++; // Increment for each element				
-			}
+			allContents.next();
+			count++; // Increment for each element
 		}
 
 		return count;
