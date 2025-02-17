@@ -7,8 +7,8 @@ from sklearn.metrics import cohen_kappa_score
 
 
 def main(args):
-    labels = pd.read_csv(args.file)
-
+    labels = pd.read_csv(args.file, sep=';')
+    print(labels.columns)
     ## Labels distribution
 
     labels_reviewer_1 = []
@@ -16,14 +16,26 @@ def main(args):
     corrected_labels = []
 
     for index, row in labels.iterrows():
-        l1, l2 = row['label 1 reviewer 1'], row['label 2 reviewer 1']
-        labels_reviewer_1.append(frozenset([str(l1), str(l2)]))
+        if 'label 3 reviewer 1' in row:
+            l1, l2, l3 = row['label 1 reviewer 1'], row['label 2 reviewer 1'], row['label 3 reviewer 1']
+            labels_reviewer_1.append(frozenset([str(l1), str(l2), str(l3)]))
+        else:
+            l1, l2 = row['label 1 reviewer 1'], row['label 2 reviewer 1']
+            labels_reviewer_1.append(frozenset([str(l1), str(l2)]))
 
-        l1, l2 = row['label 1 reviewer 2'], row['label 2 reviewer 2']
-        labels_reviewer_2.append(frozenset([str(l1), str(l2)]))
+        if 'label 3 reviewer 2' in row:
+            l1, l2, l3 = row['label 1 reviewer 2'], row['label 2 reviewer 2'], row['label 3 reviewer 2']
+            labels_reviewer_2.append(frozenset([str(l1), str(l2), str(l3)]))
+        else:
+            l1, l2 = row['label 1 reviewer 2'], row['label 2 reviewer 2']
+            labels_reviewer_2.append(frozenset([str(l1), str(l2)]))
 
-        l1, l2 = row['Final label 1'], row['Final label 2']
-        corrected_labels.append(frozenset([str(l1), str(l2)]))
+        if 'Final label 3' in row:
+            l1, l2, l3 = row['Final label 1'], row['Final label 2'], row['Final label 3']
+            corrected_labels.append(frozenset([str(l1), str(l2), str(l3)]))
+        else:
+            l1, l2 = row['Final label 1'], row['Final label 2']
+            corrected_labels.append(frozenset([str(l1), str(l2)]))
 
     final_labels = []
     for lr1, lr2, cl in zip(labels_reviewer_1, labels_reviewer_2, corrected_labels):
@@ -31,6 +43,9 @@ def main(args):
             final_labels.append(lr1)
         else:
             final_labels.append(cl)
+
+        print(lr1, lr2, final_labels[-1])
+        assert frozenset(['nan', 'nan', 'nan']) != final_labels[-1]
         assert frozenset(['nan', 'nan']) != final_labels[-1]
         assert frozenset(['nan']) != final_labels[-1]
 
@@ -67,7 +82,9 @@ def main(args):
      + geom_col()
      + coord_flip()  # Flip coordinates for horizontal bars
      # + geom_errorbar(aes(ymin='Lower', ymax='Upper'), width=0.4, color='black')
-     + theme(axis_text_y=element_text(size=10))
+     + geom_text(aes(label=df['Proportion'].round(2)), nudge_y=0.02, size=12)
+     + theme(axis_text=element_text(size=15),
+             axis_title=element_text(size=20))
      + labs(
             x='Categories',  # X-axis title
             y='Proportion',  # Y-axis title
