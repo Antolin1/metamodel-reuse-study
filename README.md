@@ -9,7 +9,7 @@ conda env create -f environment.yml
 conda activate metamodel-reuse-study
 ```
 
-For the Java environment, the project has been developed using Eclipse 2024-12, which requires Java 21. It is recommended to use the appropriate [Eclipse installer](https://www.eclipse.org/downloads/packages/release/2024-12/r), and install either the *Eclipse IDE for Java and DSL Developers* or the *Eclipse Modeling Tools* versions.
+For the Java environment, the project has been developed using Eclipse 2024-12, which requires Java 21. It is recommended to use the appropriate [Eclipse installer](https://www.eclipse.org/downloads/packages/release/2024-12/r), and install either the *Eclipse IDE for Java and DSL Developers* or the *Eclipse Modeling Tools* versions. Any dependencies of the executed code are managed through a target platform. Instructions on how to use it are provided below.
 
 ## Download and process data
 
