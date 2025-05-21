@@ -2,12 +2,14 @@
 
 ## Requirements
 
-Set-up conda environment:
+To set up the Python environment using `conda`:
+
 ```shell
 conda env create -f environment.yml
 conda activate metamodel-reuse-study
 ```
-Java and so on, TODO.
+
+For the Java environment, the project has been developed using Eclipse 2024-12, which requires Java 21. It is recommended to use the appropriate [Eclipse installer](https://www.eclipse.org/downloads/packages/release/2024-12/r), and install either the *Eclipse IDE for Java and DSL Developers* or the *Eclipse Modeling Tools* versions.
 
 ## Download and process data
 
@@ -36,11 +38,9 @@ Extract content of Ecore files and compute duplicates using Allamanis's approach
 python extract_concepts.py
 python compute_duplicates.py
 ```
+## Run EMF Compare comparisons
 
-
-## Run EMF Compare
-
-Finally run the EMF compare of `java` folder. To do this, you must load the target configuration present in the `.target` file (open in Ecilpse > Load Target Platform on top-right).
+To run the EMF Compare scripts, you must first import the Eclipse project present in the `java` folder to your workspace. This project contains a target platform configuration in the `.target` file (open in Eclipse > Load Target Platform on top-right). Then, you can run any of the main programs of the project.
 
 ## Basic statistics
 
@@ -49,7 +49,6 @@ the users with the most meta-models, etc.
 ```shell
 python dataset_statistics.py
 ```
-
 
 ## Duplication distribution
 
