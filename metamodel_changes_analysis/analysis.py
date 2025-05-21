@@ -5,8 +5,17 @@ import numpy as np
 import pandas as pd
 from plotnine import *
 from scipy.stats import mannwhitneyu, spearmanr
-from pprint import pprint
 
+
+def export_modified_metamodels(data_inter, data_intra):
+    df_inter = data_inter[data_inter['affected_elements'] > 0].copy()
+    df_intra = data_intra[data_intra['affected_elements'] > 0].copy()
+
+    df_inter['scenario'] = 'inter'
+    df_intra['scenario'] = 'intra'
+
+    combined_df = pd.concat([df_inter, df_intra])
+    combined_df.to_csv("metamodel_changes_analysis/modified_metamodels.csv", index=False)
 
 def affected_elements(data_inter, data_intra):
 
@@ -136,6 +145,7 @@ def main(args):
         if c not in data_inter.columns:
             data_inter[c] = False
 
+    export_modified_metamodels(data_inter, data_intra)
     affected_elements(data_inter, data_intra)
     feature_comparison(data_inter, data_intra)
 
