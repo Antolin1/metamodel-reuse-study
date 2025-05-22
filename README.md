@@ -38,6 +38,10 @@ Extract content of Ecore files and compute duplicates using Allamanis's approach
 python extract_concepts.py
 python compute_duplicates.py
 ```
+
+The data used in the paper (metamodels and duplication network) can be found [here](https://zenodo.org/records/15487407).
+As such, there is no need to execute the scripts in this section.
+
 ## Run EMF Compare comparisons
 
 To run the EMF Compare scripts, you must first import the Eclipse project present in the `java` folder to your workspace. This project contains a target platform configuration in the `.target` file (open in Eclipse > Load Target Platform on top-right). Then, you can run any of the main programs of the project.
