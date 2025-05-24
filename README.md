@@ -13,6 +13,11 @@ For the Java environment, the project has been developed using Eclipse 2024-12, 
 
 ## Download and process data
 
+The data used in the paper (metamodels and duplication network) can be found [here](https://zenodo.org/records/15487407).
+As such, there is no need to execute the scripts in this section.
+
+### Steps
+
 Get list of Ecore files from the paper's website:
 ```shell
 wget https://www.win.tue.nl/~obabur/publications/EMSE22/listOfEcoreFiles.csv
@@ -39,16 +44,31 @@ python extract_concepts.py
 python compute_duplicates.py
 ```
 
-The data used in the paper (metamodels and duplication network) can be found [here](https://zenodo.org/records/15487407).
-As such, there is no need to execute the scripts in this section.
-
 ## Run EMF Compare comparisons
 
 To run the EMF Compare scripts, you must first import the Eclipse project present in the `java` folder to your workspace. This project contains a target platform configuration in the `.target` file (open in Eclipse > Load Target Platform on top-right). Then, you can run any of the main programs of the project.
 
+Again, if there is no desire to run these steps, the final datasets are already present in the [`metamodel_changes_analysis`](metamodel_changes_analysis) folder of the repository.
+
+### Steps
+
+Calculate the cluster stars that are used in the comparisons:
+
+```shell
+python calculate_cluster_stars.csv
+```
+
+In the java project, run the following main programs:
+
+- `ClusterStarsAnalysisConcreteFeatures.java`
+- `ClusterStarsAnalysisIntra.java`
+
+These will generate their output datasets inside the [`feature_clusters`](feature_clusters) folder.
+
+
 ## Basic statistics
 
-The following command compute basic statistics of the dataset, such as the number of meta-models, the number of repositories,
+The following command computes basic statistics of the dataset, such as the number of meta-models, the number of repositories,
 the users with the most meta-models, etc.
 ```shell
 python dataset_statistics.py
