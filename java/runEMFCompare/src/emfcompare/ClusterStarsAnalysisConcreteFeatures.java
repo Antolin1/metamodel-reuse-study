@@ -14,6 +14,9 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
+/**
+ * Obtains the difference features from the meta-models
+ */
 public class ClusterStarsAnalysisConcreteFeatures {
 
 	public static void main(String[] args) {

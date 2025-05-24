@@ -24,6 +24,9 @@ import org.eclipse.emf.compare.ReferenceChange;
 import org.eclipse.emf.compare.ResourceAttachmentChange;
 import org.eclipse.emf.ecore.EClass;
 
+/**
+ * Auxiliary script used to analyse different meta-model samples during the work
+ */
 public class ClusterFineGrainAnalysis {
 
 	public static void main(String[] args) {

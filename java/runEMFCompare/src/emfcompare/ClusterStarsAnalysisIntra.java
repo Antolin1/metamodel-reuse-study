@@ -17,6 +17,10 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 
+/**
+ * Obtains the set of features and generates the dataset for the intra scenario
+ * in a single script
+ */
 public class ClusterStarsAnalysisIntra {
 
 	public static void main(String[] args) {

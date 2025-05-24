@@ -13,6 +13,11 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+/**
+ * Script used to evaluate the performace of the clone detector. This script
+ * picks the closest "negative clone" for each meta-model, this is, the meta-model
+ * with the least number of differences that was not considered a clone.
+ */
 public class ToolEvaluationNegatives {
 
 	public static void main(String[] args) {

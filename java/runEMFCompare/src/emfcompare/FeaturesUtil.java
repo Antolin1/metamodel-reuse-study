@@ -18,6 +18,9 @@ import org.eclipse.emf.compare.ReferenceChange;
 import org.eclipse.emf.compare.ResourceAttachmentChange;
 import org.eclipse.emf.ecore.EClass;
 
+/**
+ * Util functions to obtain the difference features from a meta-model comparison
+ */
 public class FeaturesUtil {
 
 	public static void main(String[] args) {

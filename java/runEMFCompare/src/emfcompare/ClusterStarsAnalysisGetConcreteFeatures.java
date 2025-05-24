@@ -12,6 +12,10 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+/**
+ * Obtains the set of difference features that are found in the analysed meta-model,
+ * i.e., the columns that the dataset of difference features will have
+ */
 public class ClusterStarsAnalysisGetConcreteFeatures {
 
 	public static void main(String[] args) {

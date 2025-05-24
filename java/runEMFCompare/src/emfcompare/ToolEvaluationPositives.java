@@ -14,6 +14,11 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+/**
+ * Script used to evaluate the performace of the clone detector. This script
+ * picks the farthest "positive clone" for each meta-model, this is, the meta-model
+ * with the largest number of differences that was considered a clone.
+ */
 public class ToolEvaluationPositives {
 
 	public static void main(String[] args) {
