@@ -15,7 +15,7 @@ if token is None:
 
 GITHUB = Github(token, per_page=100)
 LOGGER = logging.getLogger()
-USERS_TO_IGNORE = ['modelset', 'mar-platform', 'models-lab', 'Antolin1', 'jesusc']
+USERS_TO_IGNORE = ['modelset', 'mar-platform', 'models-lab', 'Antolin1']
 
 
 def load_existing_ids(csv_path):
