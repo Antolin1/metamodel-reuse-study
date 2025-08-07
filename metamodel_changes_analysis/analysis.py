@@ -138,11 +138,11 @@ def main(args):
 
     for c in data_inter.columns:
         if c not in data_intra.columns:
-            data_intra[c] = False
+            data_intra[c] = 0
 
     for c in data_intra.columns:
         if c not in data_inter.columns:
-            data_inter[c] = False
+            data_inter[c] = 0
 
     export_modified_metamodels(data_inter, data_intra)
     affected_elements(data_inter, data_intra)
