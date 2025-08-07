@@ -46,7 +46,7 @@ def histogram(G):
             geom_histogram(bins=200, color='black', fill='gray') +
             scale_y_log10() +
             labs(
-                title='Cluster sizes distribution',
+                # title='Cluster sizes distribution',
                 x='Cluster size',
                 y='Frequency'
             ) +

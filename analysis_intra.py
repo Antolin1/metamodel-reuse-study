@@ -62,7 +62,7 @@ def intra_project_reuse(G, args):
             geom_boxplot() +
             # scale_y_log10() +  # Log scale for x-axis
             labs(
-                title='Distribution of $Dup\mathcal{M}_r$',
+                # title='Distribution of $Dup\mathcal{M}_r$',
                 y='$Dup\mathcal{M}_r$',
                 x=''  # No y-axis label since it's horizontal
             ) +

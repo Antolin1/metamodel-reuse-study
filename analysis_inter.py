@@ -88,7 +88,7 @@ def amount_inter(G):
             neig = [m for m in nx.neighbors(G, n) if G.nodes[m]['user'] + '/' + G.nodes[m]['repo'] != r]
             if len(neig) > 0:
                 node_inter += 1
-        nodes_inter.append(node_inter / len(nodes))
+        nodes_inter.append(100 * node_inter / len(nodes))
     print(f'Mean proportion of inter-metamodels per repository: {np.mean(nodes_inter):.4f} +- {np.std(nodes_inter):.4f}')
 
     # blox-plot scores
@@ -100,7 +100,7 @@ def amount_inter(G):
             geom_boxplot() +
             # scale_y_log10() +  # Log scale for x-axis
             labs(
-                title='Distribution of $InterDup\mathcal{M}_r$',
+                # title='Distribution of $InterDup\mathcal{M}_r$',
                 y='$InterDup\mathcal{M}_r$',
                 x=''  # No y-axis label since it's horizontal
             ) +

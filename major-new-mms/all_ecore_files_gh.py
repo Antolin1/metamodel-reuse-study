@@ -143,8 +143,8 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Crawl GitHub for Ecore file metadata')
     parser.add_argument('--output_csv', default='ecore_metadata.csv')
-    parser.add_argument('--step', default=5, type=int)
-    parser.add_argument('--init', default=512, type=int)
+    parser.add_argument('--step', default=10, type=int)
+    parser.add_argument('--init', default=128, type=int)
     parser.add_argument('--end', default=30_000_000, type=int)
     parser.add_argument('--logger', default='ecore_github_crawler.log')
     args = parser.parse_args()
