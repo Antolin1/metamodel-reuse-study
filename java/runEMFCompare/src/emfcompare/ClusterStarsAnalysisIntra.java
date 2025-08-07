@@ -69,7 +69,9 @@ public class ClusterStarsAnalysisIntra {
 
 		System.out.println(features);
 
-		String[] metadata = { "repo", "repo_name", "cluster", "original", "original_path", "duplicate", "duplicate_path", "affected_elements" };
+		String[] metadata = { "repo", "repo_name", "cluster", "original", "original_path", "duplicate", "duplicate_path",
+				"affected_elements", "original_size", "duplicate_size" };
+
 		String[] featuresArray = features.toArray(new String[0]);
 
 		String[] header = new String[metadata.length + featuresArray.length];
@@ -105,6 +107,8 @@ public class ClusterStarsAnalysisIntra {
 				MetamodelComparison mc = comparisons.get(getKey(csvRecord));
 
 				newRecord.add("" + mc.getNumberOfAffectedElements());
+				newRecord.add("" + mc.getRightSize());
+				newRecord.add("" + mc.getLeftSize());
 
 				Set<String> foundFeatures = FeaturesUtil.getConcreteFeatures(mc);
 

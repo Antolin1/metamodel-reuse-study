@@ -31,7 +31,10 @@ data["sum_changed_features"] = data[features].sum(axis=1)
 data_no_changes = data[data["sum_changed_features"] == 0]
 print("No changes: ", data_no_changes.shape)
 
-data.to_csv('cluster_stars_with_concrete_features-inter.csv', index=False)
+data_inter = data[data["inter"]].copy()
+data_inter.drop(columns=["inter"], inplace=True)
+
+data_inter.to_csv('../metamodel_changes_analysis/cluster_stars_with_concrete_features-inter.csv', index=False)
 
 #%%
 

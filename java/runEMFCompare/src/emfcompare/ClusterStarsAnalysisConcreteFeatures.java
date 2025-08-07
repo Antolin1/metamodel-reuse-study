@@ -25,7 +25,8 @@ public class ClusterStarsAnalysisConcreteFeatures {
 		String inputCsv = rootFolder + "cluster_stars.csv";
 		String outputCsv = rootFolder + "feature_clusters/cluster_stars_with_concrete_features.csv";
 
-		String[] metadata = { "cluster", "original", "original_path", "duplicate", "duplicate_path", "affected_elements" };
+		String[] metadata = { "cluster", "original", "original_path", "duplicate", "duplicate_path",
+				"affected_elements", "original_size", "duplicate_size" };
 		
 		String[] features = { "ADD-EAnnotation", "ADD-EAttribute", "ADD-EClass", "ADD-EDataType", "ADD-EEnum", "ADD-EEnumLiteral", "ADD-EGenericType",
 				"ADD-EObject", "ADD-EOperation", "ADD-EPackage", "ADD-EParameter", "ADD-EReference", "ADD-EStringToStringMapEntry",
@@ -90,6 +91,8 @@ public class ClusterStarsAnalysisConcreteFeatures {
 					mc.dispose();
 
 					newRecord.add("" + mc.getNumberOfAffectedElements());
+					newRecord.add("" + mc.getRightSize());
+					newRecord.add("" + mc.getLeftSize());
 
 					Set<String> foundFeatures = FeaturesUtil.getConcreteFeatures(mc);
 
