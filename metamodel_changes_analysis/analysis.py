@@ -42,7 +42,6 @@ def affected_elements(data_inter, data_intra):
             ggplot(combined_df, aes(x='scenario', y='Affected elements'))
             + geom_boxplot()
             + theme_minimal()
-            + ggtitle("Affected elements at intra- and inter-level")
             + scale_y_log10()
     )
 
