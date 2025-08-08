@@ -1,6 +1,7 @@
 #%%
 import pandas as pd
 import numpy as np
+from collections import defaultdict
 
 # %%
 # Exploratory
@@ -57,20 +58,72 @@ df_typesBC = df_typesBC[df_typesBC["relative_change"] <= 1].copy()
 df_typesBC["relative_change"].hist(bins=10, figsize=(5, 5))
 
 #%%
+num_bins = 10
 
 # get a sample for each bin and save it in a different csv file
-df_typesBC["bin"] = pd.cut(df_typesBC["relative_change"], bins=10)
-sampled_df = df_typesBC.groupby("bin").apply(lambda x: x.sample(n=min(n_samples, len(x)))).reset_index(drop=True)
+df_typesBC["bin"] = pd.cut(df_typesBC["relative_change"], bins=num_bins)
 
-n_samples = 5
+
+#%%
+
+n_samples = 10
 np.random.seed(42)
+sampled_df = df_typesBC.groupby("bin").apply(
+        lambda x: x.sample(n=min(n_samples, len(x)))).reset_index(drop=True)
 
 # seave each bin sample to a separate csv file
 for bin_label, group in sampled_df.groupby("bin"):
-    bin_label = str(bin_label).replace("(", "").replace("]", "").replace(",", "-")
-    bin_label = bin_label.replace(" ", "")
-    group.to_csv(f"sampled_relative_change_{bin_label}.csv", index=False)
+    bin_label = str(bin_label).replace("(", "").replace("]", "").replace(",", "-").replace(" ", "")
+    csv_name = f"sampled_relative_change_{bin_label}.csv"
+    print(f'doAnalysis("{csv_name}", "all");')
+    group.to_csv(csv_name, index=False)
+
 # %%
 # sample outliers as well
 outliers_sampled = outliers.sample(n=min(n_samples, len(outliers)))
-outliers_sampled.to_csv("sampled_relative_change_outliers.csv", index=False)
+outliers_csv_name = "sampled_relative_change_outliers.csv"
+print(f'doAnalysis("{outliers_csv_name}", "all");')
+outliers_sampled.to_csv(outliers_csv_name, index=False)
+
+# %%
+df_aux = df_typesBC.copy()
+
+# group add or delete features in the same column
+grouping = defaultdict(list)
+for c in df_aux.columns:
+    if c.startswith('ADD-'):
+        grouping[c.split('-')[1]].append(c)
+    elif c.startswith('DELETE-'):
+        grouping[c.split('-')[1]].append(c)
+
+for c, cs in grouping.items():
+    # or of the columns in cs and store in c
+    df_aux[f'ADD-OR-DELETE-{c}'] = data_inter[cs].any(axis=1)
+
+    # remove data in cs
+    df_aux.drop(columns=cs, inplace=True)
+
+features = [c for c in df_aux.columns
+            if ('ADD' in c or 'CHANGE' in c or 'DELETE' in c or 'MOVE' in c)]
+
+
+for bin_label, group in df_aux.groupby("bin"):
+    bin_label = str(bin_label).replace("(", "").replace("]", "").replace(",", "-").replace(" ", "")
+
+    feature_counts = defaultdict(int)
+
+    for idx, row in group.iterrows():
+        for feature in features:
+            if row[feature] > 0:
+                feature_counts[feature] += 1
+
+    # sort features by count and print the top ones
+    sorted_features = sorted(feature_counts.items(), key=lambda x: x[1], reverse=True)
+    print(f"Features in bin {bin_label}:")
+
+    for feature, count in sorted_features[:20]:
+        print(f"{feature}: {count/len(group):.2f} ({count})")
+
+    print("\n\n")
+
+# %%

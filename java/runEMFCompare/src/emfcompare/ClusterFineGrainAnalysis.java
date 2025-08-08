@@ -31,20 +31,17 @@ public class ClusterFineGrainAnalysis {
 
 	public static void main(String[] args) {
 
-		// macro/grouped clusters
-		//		doAnalysis("macro_cluster0-structural-major-sample.csv", "all");
-		//		doAnalysis("macro_cluster1-annotations-sample.csv", "all");
-		//		doAnalysis("macro_cluster2-nonstructural-minor-sample.csv", "all");
-		//		doAnalysis("macro_cluster3-package-sample.csv", "all");
-
-		// fine-grain analysis of kmeans clusters
-		//		for (int c = 0; c < 10; c++) {
-		//			doAnalysis(String.format("kmeans-cluster%d-sample.csv", c), "all");
-		//		}
-		doAnalysis("sample_diff_types.csv", "all");
-		doAnalysis("add_delete_epackage.csv", "all");
-		doAnalysis("move_epackage_root_pkg.csv", "all");
-		doAnalysis("has_move_epackage.csv", "all");
+		doAnalysis("sampled_relative_change_-0.000942-0.1.csv", "all");
+		doAnalysis("sampled_relative_change_0.1-0.2.csv", "all");
+		doAnalysis("sampled_relative_change_0.2-0.3.csv", "all");
+		doAnalysis("sampled_relative_change_0.3-0.4.csv", "all");
+		doAnalysis("sampled_relative_change_0.4-0.5.csv", "all");
+		doAnalysis("sampled_relative_change_0.5-0.6.csv", "all");
+		doAnalysis("sampled_relative_change_0.6-0.7.csv", "all");
+		doAnalysis("sampled_relative_change_0.7-0.8.csv", "all");
+		doAnalysis("sampled_relative_change_0.8-0.9.csv", "all");
+		doAnalysis("sampled_relative_change_0.9-1.0.csv", "all");
+		doAnalysis("sampled_relative_change_outliers.csv", "all");
 
 		System.out.println("Done");
 	}
@@ -52,8 +49,8 @@ public class ClusterFineGrainAnalysis {
 	public static void doAnalysis(String clusterCsv, String className) {
 		String rootFolder = "../../";
 		String metamodelsFolder = rootFolder + "metamodels/";
-		String inputFile = rootFolder + "feature_clusters/" + clusterCsv;
-		String outputFile = rootFolder + "feature_clusters/" + clusterCsv + ".analysis.txt";
+		String inputFile = rootFolder + "metamodel_changes_analysis/" + clusterCsv;
+		String outputFile = inputFile + ".analysis.txt";
 
 		try (
 				Reader reader = new FileReader(inputFile);
