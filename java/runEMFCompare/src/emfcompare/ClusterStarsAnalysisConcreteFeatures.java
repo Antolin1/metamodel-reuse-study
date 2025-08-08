@@ -22,8 +22,8 @@ public class ClusterStarsAnalysisConcreteFeatures {
 	public static void main(String[] args) {
 		String rootFolder = "../../";
 		String metamodelsFolder = rootFolder + "metamodels/";
-		String inputCsv = rootFolder + "cluster_stars.csv";
-		String outputCsv = rootFolder + "feature_clusters/cluster_stars_with_concrete_features.csv";
+		String inputCsv = rootFolder + "cluster_stars-inter.csv";
+		String outputCsv = rootFolder + "feature_clusters/cluster_stars_with_concrete_features-inter.csv";
 
 		String[] metadata = { "cluster", "original", "original_path", "duplicate", "duplicate_path",
 				"affected_elements", "original_size", "duplicate_size" };
@@ -84,6 +84,7 @@ public class ClusterStarsAnalysisConcreteFeatures {
 				try {
 					MetamodelComparison mc = new MetamodelComparison();
 					mc.setUseAllTypes(true);
+					mc.setIgnoreAnnotations(false);
 					// left takes the new model role, so right is the "original"
 					mc.compare(
 							metamodelsFolder + csvRecord.get("duplicate_path"),

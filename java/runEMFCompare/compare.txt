@@ -1,2 +1,2 @@
-damenac$puzzle$plugins#fr.inria.diverse.puzzle.metrics#temp#geo.ecore
-dzonekl$netxstudio$model#com.netxforge.netxstudio.models#models#emf#05012011#geo.ecore
+movespace$gmfsamples$School#trunk#School#model#school.ecore
+francoispfister$diagraph$org.isoe.fwk.megamodel.deploy#repository-bundle#skol.ecore

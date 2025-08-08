@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.common.util.URI;
@@ -38,6 +39,7 @@ import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.ecore.ETypedElement;
+import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
@@ -57,6 +59,11 @@ public class MetamodelComparison {
 	 * Disable cutoff and subordinate types
 	 */
 	protected boolean useAllTypes = false;
+
+	/**
+	 * Ignore Annotation changes when counting affected elements
+	 */
+	protected boolean ignoreAnnotations = false;
 
 	protected ResourceSet leftRS, rightRS;
 
@@ -93,48 +100,57 @@ public class MetamodelComparison {
 
 	public static void main(String[] args) {
 
+		boolean debug = true;
+
 		MetamodelComparison mc = new MetamodelComparison();
 
-		//		String rootFolder = "../../tool_evaluation/";
 		String rootFolder = "../../metamodels/";
 
 		String left = null;
 		String right = null;
 
+		// the first line is for the original (old) metamodel, the second for the new
 		try (BufferedReader br = new BufferedReader(new FileReader("compare.txt"))) {
-			left = br.readLine();
 			right = br.readLine();
+			left = br.readLine();
 		}
 		catch (IOException e) {
 			e.printStackTrace();
 		}
 
+		mc.setUseAllTypes(true);
+		mc.setIgnoreAnnotations(true);
+
 		mc.compare(rootFolder + left, rootFolder + right);
 
-		for (Diff d : mc.getComparison().getDifferences()) {
-			System.out.println(d);
-			if (d instanceof AttributeChange) {
-				AttributeChange ac = (AttributeChange) d;
-				System.out.println("New value (left): " + ac.getValue());
+		if (debug) {
+			for (Diff d : mc.getComparison().getDifferences()) {
+				System.out.println(d);
+				if (d instanceof AttributeChange) {
+					AttributeChange ac = (AttributeChange) d;
+					System.out.println("New value (left): " + ac.getValue());
+				}
+				else if (d instanceof ReferenceChange) {
+					ReferenceChange rc = (ReferenceChange) d;
+					System.out.println("New value (left): " + rc.getValue());
+				}
+				else if (d instanceof ResourceAttachmentChange) {
+					System.out.println("RESOURCE ATTACHMENT");
+					ResourceAttachmentChange rac = (ResourceAttachmentChange) d;
+					System.out.println(rac.getResourceURI());
+				}
+				System.out.println("Left match: " + d.getMatch().getLeft());
+				System.out.println("Right match: " + d.getMatch().getRight());
+				System.out.println("----------------------------------------------");
 			}
-			else if (d instanceof ReferenceChange) {
-				ReferenceChange rc = (ReferenceChange) d;
-				System.out.println("New value (left): " + rc.getValue());
-			}
-			else if (d instanceof ResourceAttachmentChange) {
-				System.out.println("RESOURCE ATTACHMENT");
-				ResourceAttachmentChange rac = (ResourceAttachmentChange) d;
-				System.out.println(rac.getResourceURI());
-			}
-			System.out.println("Left match: " + d.getMatch().getLeft());
-			System.out.println("Right match: " + d.getMatch().getRight());
-			System.out.println("----------------------------------------------");
 		}
+
+		System.out.println("Left  (new) size: " + mc.getLeftSize());
+		System.out.println("Right (old) size: " + mc.getRightSize());
 
 		System.out.println("Number of differences: " + mc.getNumberOfDifferences());
 		System.out.println("Number of affected elements: " + mc.getNumberOfAffectedElements());
-		System.out.println("Left size: " + mc.getLeftSize());
-		System.out.println("Right size: " + mc.getRightSize());
+		System.out.println("Ratio of affected elements: " + (float) mc.getNumberOfAffectedElements() / mc.getRightSize());
 
 		System.out.println("@@@@@@@@@@@@@@@@");
 		Map<String, Integer> diffCounts = mc.getDiffCounts();
@@ -339,6 +355,51 @@ public class MetamodelComparison {
 			countChangeDiff(m);
 		}
 		numberOfAffectedElements = changesMap.size() + otherDiffsCounter;
+		
+		if (ignoreAnnotations) {
+			numberOfAffectedElements -= countaffectedElementsByAnnotationsOnly();
+		}
+	}
+
+	protected int countaffectedElementsByAnnotationsOnly() {
+		int affectedElementsByAnnotationsOnly = 0;
+
+		// changed elements
+		for (Entry<Match, List<Diff>> entry : changesMap.entrySet()) {
+			EClass matchType = getAffectedType(entry.getKey());
+
+			// if the matched element is an annotation or a map entry
+			if (matchType.equals(EcorePackage.Literals.EANNOTATION) ||
+					matchType.equals(EcorePackage.Literals.ESTRING_TO_STRING_MAP_ENTRY)) {
+
+				affectedElementsByAnnotationsOnly++;
+				continue;
+			}
+
+			// if all the differences of the matched element are annotation related
+			boolean annotationRelated = true;
+			for (Diff d : entry.getValue()) {
+				if (!isAnnotationRelated(d)) {
+					annotationRelated = false;
+					break;
+				}
+			}
+			if (annotationRelated) {
+				affectedElementsByAnnotationsOnly++;
+			}
+		}
+
+		// added/deleted elements
+		for (Diff d : otherDiffs) {
+			EClass matchType = getAffectedType(d);
+			if (matchType.equals(EcorePackage.Literals.EANNOTATION) ||
+					matchType.equals(EcorePackage.Literals.ESTRING_TO_STRING_MAP_ENTRY) ||
+					isAnnotationRelated(d)) {
+				affectedElementsByAnnotationsOnly++;
+			}
+		}
+
+		return affectedElementsByAnnotationsOnly;
 	}
 
 	protected Match getFirstNotSubordinateParent(Diff d) {
@@ -532,7 +593,11 @@ public class MetamodelComparison {
 		Iterator<EObject> allContents = EcoreUtil.getAllContents(resource.getContents(), false);
 
 		while (allContents.hasNext()) {
-			allContents.next();
+			EObject elem = allContents.next();
+			if (ignoreAnnotations && (elem.eClass().equals(EcorePackage.Literals.EANNOTATION) ||
+					elem.eClass().equals(EcorePackage.Literals.ESTRING_TO_STRING_MAP_ENTRY))) {
+				continue; // avoid counting annotation related elements
+			}
 			count++; // Increment for each element
 		}
 
@@ -575,4 +640,9 @@ public class MetamodelComparison {
 	public void setUseAllTypes(boolean useAllTypes) {
 		this.useAllTypes = useAllTypes;
 	}
+
+	public void setIgnoreAnnotations(boolean ignoreAnnotations) {
+		this.ignoreAnnotations = ignoreAnnotations;
+	}
+
 }

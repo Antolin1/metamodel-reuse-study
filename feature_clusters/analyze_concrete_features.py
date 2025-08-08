@@ -12,11 +12,7 @@ No feature filtering is done in this script.
 #%%
 import pandas as pd
 
-data = pd.read_csv('cluster_stars_with_concrete_features.csv')
-data['repo_original'] = data['original_path'].str.split('$').str[0] + '/' + data['original_path'].str.split('$').str[1]
-data['repo_duplicate'] = data['duplicate_path'].str.split('$').str[0] + '/' + data['duplicate_path'].str.split('$').str[1]
-data['inter'] = data['repo_original'] != data['repo_duplicate']
-data
+data = pd.read_csv('cluster_stars_with_concrete_features-inter.csv')
 
 #%%
 features = [c for c in data.columns if ('ADD' in c or 'CHANGE' in c or 'DELETE' in c or 'MOVE' in c)]
@@ -25,16 +21,12 @@ print(len(features))
 
 #%%
 data["sum_changed_features"] = data[features].sum(axis=1)
+data.to_csv('../metamodel_changes_analysis/cluster_stars_with_concrete_features-inter.csv', index=False)
+
 
 #%%
-
 data_no_changes = data[data["sum_changed_features"] == 0]
 print("No changes: ", data_no_changes.shape)
-
-data_inter = data[data["inter"]].copy()
-data_inter.drop(columns=["inter"], inplace=True)
-
-data_inter.to_csv('../metamodel_changes_analysis/cluster_stars_with_concrete_features-inter.csv', index=False)
 
 #%%
 
