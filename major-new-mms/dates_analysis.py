@@ -71,4 +71,4 @@ metamodel_counts_with_dates = pd.merge(metamodel_counts, repo_creation_dates, on
 metamodel_counts_with_dates_top10 = metamodel_counts_with_dates.head(20)
 print(metamodel_counts_with_dates_top10.head(20))
 
-print(df[df["path"].str.contains("/bin/")])
+print(df[df["path"].str.contains("/impl/")])
