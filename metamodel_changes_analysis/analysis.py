@@ -48,6 +48,23 @@ def affected_elements(data_inter, data_intra):
     plot.save("affected_elements_plot.pdf", format="pdf")
 
     stat, p_value = mannwhitneyu(df1['Affected elements'], df2['Affected elements'], alternative='two-sided')
+    # Sample sizes
+    n1 = len(df1['Affected elements'])
+    n2 = len(df2['Affected elements'])
+
+    # Calculate mean and standard deviation of U under H0
+    U_mean = n1 * n2 / 2
+    U_std = np.sqrt(n1 * n2 * (n1 + n2 + 1) / 12)
+
+    # Compute Z
+    z = (stat - U_mean) / U_std
+
+    # Effect size r
+    r = z / np.sqrt(n1 + n2)
+
+    print(f"U statistic: {stat}")
+    print(f"p-value: {p_value}")
+    print(f"Effect size r: {r:.4f}")
 
     # Display the results
     print(f"Statistic: {stat}")
