@@ -31,7 +31,7 @@ public class ClusterFineGrainAnalysis {
 
 	public static void main(String[] args) {
 
-		doAnalysis("sampled_relative_change_-0.000942-0.1.csv", "all");
+		doAnalysis("sampled_relative_change_-0.000882-0.1.csv", "all");
 		doAnalysis("sampled_relative_change_0.1-0.2.csv", "all");
 		doAnalysis("sampled_relative_change_0.2-0.3.csv", "all");
 		doAnalysis("sampled_relative_change_0.3-0.4.csv", "all");
@@ -89,8 +89,27 @@ public class ClusterFineGrainAnalysis {
 							countFeatureDiff(diffCounts, d);
 						}
 					}
-					writer.println("Left size: " + mc.getLeftSize());
-					writer.println("Right size: " + mc.getRightSize());
+					writer.println("Left  (new) size: " + mc.getLeftSize());
+					writer.println("Right (old) size: " + mc.getRightSize());
+
+					writer.println("Left  (new) size (ignoring annotations): " + mc.getLeftSize(true));
+					writer.println("Right (old) size (ignoring annotations): " + mc.getRightSize(true));
+					writer.println("---");
+
+					writer.println("Number of differences: " + mc.getNumberOfDifferences());
+					writer.println("Number of affected elements: " + mc.getNumberOfAffectedElements());
+					writer.println("Number of affected annotations: " + mc.getNumberOfAffectedAnnotations());
+					writer.println("Difference: " + (mc.getNumberOfAffectedElements() - mc.getNumberOfAffectedAnnotations()));
+					writer.println("---");
+
+					writer.println("Ratio of affected elements (not ignoring annotations): "
+							+ (float) mc.getNumberOfAffectedElements() / mc.getRightSize());
+
+					writer.println("Ratio of affected elements (ignoring annotations): "
+							+ (float) (mc.getNumberOfAffectedElements() - mc.getNumberOfAffectedAnnotations()) / mc.getRightSize(true));
+
+					writer.println("@@@@@@@@@@@@@@@@");
+
 					writer.println("All diffs: " + sortMap(mc.getDiffCounts()));
 					writer.println("Fine diffs: " + sortMap(diffCounts));
 					writer.println();

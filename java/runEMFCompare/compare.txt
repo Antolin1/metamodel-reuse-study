@@ -1,2 +1,2 @@
-movespace$gmfsamples$School#trunk#School#model#school.ecore
 francoispfister$diagraph$org.isoe.fwk.megamodel.deploy#repository-bundle#skol.ecore
+movespace$gmfsamples$School#trunk#School#model#school.ecore

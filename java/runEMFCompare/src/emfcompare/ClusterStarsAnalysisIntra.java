@@ -27,7 +27,7 @@ public class ClusterStarsAnalysisIntra {
 		String rootFolder = "../../";
 		String metamodelsFolder = rootFolder + "metamodels/";
 		String csvFile = rootFolder + "cluster_stars-intra.csv";
-		String outputCsv = rootFolder + "feature_clusters/cluster_stars_with_concrete_features-intra.csv";
+		String outputCsv = rootFolder + "metamodel_changes_analysis/cluster_stars_with_concrete_features-intra.csv";
 
 		// the set of diff features is calculated first, and then the dataset is generated
 		Set<String> features = new TreeSet<>();
@@ -70,7 +70,8 @@ public class ClusterStarsAnalysisIntra {
 		System.out.println(features);
 
 		String[] metadata = { "repo", "repo_name", "cluster", "original", "original_path", "duplicate", "duplicate_path",
-				"affected_elements", "original_size", "duplicate_size" };
+				"affected_elements", "original_size", "duplicate_size",
+				"affected_annotations", "original_size_no_annotations", "duplicate_size_no_annotations" };
 
 		String[] featuresArray = features.toArray(new String[0]);
 
@@ -106,9 +107,15 @@ public class ClusterStarsAnalysisIntra {
 
 				MetamodelComparison mc = comparisons.get(getKey(csvRecord));
 
+				// total sizes (annotations not ignored)
 				newRecord.add("" + mc.getNumberOfAffectedElements());
 				newRecord.add("" + mc.getRightSize());
 				newRecord.add("" + mc.getLeftSize());
+
+				// count of annotation changes, and sizes ignoring annotations
+				newRecord.add("" + mc.getNumberOfAffectedAnnotations());
+				newRecord.add("" + mc.getRightSize(true));
+				newRecord.add("" + mc.getLeftSize(true));
 
 				Set<String> foundFeatures = FeaturesUtil.getConcreteFeatures(mc);
 

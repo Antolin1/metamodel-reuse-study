@@ -23,10 +23,11 @@ public class ClusterStarsAnalysisConcreteFeatures {
 		String rootFolder = "../../";
 		String metamodelsFolder = rootFolder + "metamodels/";
 		String inputCsv = rootFolder + "cluster_stars-inter.csv";
-		String outputCsv = rootFolder + "feature_clusters/cluster_stars_with_concrete_features-inter.csv";
+		String outputCsv = rootFolder + "metamodel_changes_analysis/cluster_stars_with_concrete_features-inter.csv";
 
 		String[] metadata = { "cluster", "original", "original_path", "duplicate", "duplicate_path",
-				"affected_elements", "original_size", "duplicate_size" };
+				"affected_elements", "original_size", "duplicate_size",
+				"affected_annotations", "original_size_no_annotations", "duplicate_size_no_annotations" };
 		
 		String[] features = { "ADD-EAnnotation", "ADD-EAttribute", "ADD-EClass", "ADD-EDataType", "ADD-EEnum", "ADD-EEnumLiteral", "ADD-EGenericType",
 				"ADD-EObject", "ADD-EOperation", "ADD-EPackage", "ADD-EParameter", "ADD-EReference", "ADD-EStringToStringMapEntry",
@@ -58,7 +59,6 @@ public class ClusterStarsAnalysisConcreteFeatures {
 		
 		System.arraycopy(metadata, 0, header, 0, metadata.length);
 		System.arraycopy(features, 0, header, metadata.length, features.length);
-		
 
 		int cluster = 0;
 		try (
@@ -84,16 +84,21 @@ public class ClusterStarsAnalysisConcreteFeatures {
 				try {
 					MetamodelComparison mc = new MetamodelComparison();
 					mc.setUseAllTypes(true);
-					mc.setIgnoreAnnotations(false);
 					// left takes the new model role, so right is the "original"
 					mc.compare(
 							metamodelsFolder + csvRecord.get("duplicate_path"),
 							metamodelsFolder + csvRecord.get("original_path"));
 					mc.dispose();
 
+					// total sizes (annotations not ignored)
 					newRecord.add("" + mc.getNumberOfAffectedElements());
 					newRecord.add("" + mc.getRightSize());
 					newRecord.add("" + mc.getLeftSize());
+
+					// count of affected elements that are annotations, and sizes ignoring annotations
+					newRecord.add("" + mc.getNumberOfAffectedAnnotations());
+					newRecord.add("" + mc.getRightSize(true));
+					newRecord.add("" + mc.getLeftSize(true));
 
 					Set<String> foundFeatures = FeaturesUtil.getConcreteFeatures(mc);
 
