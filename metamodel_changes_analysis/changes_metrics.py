@@ -36,6 +36,9 @@ assert (df["affected_annotations"] >= 0).all(), "affected_annotations should be 
 assert (df["original_size"] >= 5).all(), "original_size should be greater than the minimum size"
 assert (df["duplicate_size"] >= 5).all(), "duplicate_size should be greater than the minimum size"
 
+assert (df["original_size_no_annotations"] >= 0).all(), "original_size without counting annotations should be non-negative"
+assert (df["duplicate_size_no_annotations"] >= 0).all(), "duplicate_size without counting annotations should be non-negative"
+
 assert (df["affected_elements"] >= df["affected_annotations"]).all(), "affected_elements should be greater than or equal to affected_annotations"
 
 assert (df["original_size"] >= df["original_size_no_annotations"]).all(), "original_size should not be less than original_size_no_annotations"
@@ -82,6 +85,20 @@ print(f"Outliers (relative_change > 1): {len(outliers)}")
 df_typesBC = df_typesBC[df_typesBC["relative_change"] <= 1].copy()
 
 #%%
+# violin plot of relative_change
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(10, 5))
+sns.violinplot(x=df_typesBC["relative_change"],
+                color='lightblue')
+plt.xticks(np.arange(0, 1.1, 0.1))
+plt.xlabel("Relative Change")
+plt.grid(True)
+plt.show()
+
+
+#%%
 # histogram of relative_change
 num_bins = 10
 df_typesBC["relative_change"].hist(bins=num_bins, figsize=(5, 5))
@@ -96,7 +113,7 @@ bin_sizes = df_typesBC["bin"].value_counts().sort_index()
 print(bin_sizes)
 
 #%%
-n_samples = 10
+n_samples = 20
 np.random.seed(42)
 sampled_df = df_typesBC.groupby("bin").apply(
         lambda x: x.sample(n=min(n_samples, len(x)))).reset_index(drop=True)
@@ -151,16 +168,55 @@ for bin_label, group in df_aux.groupby("bin"):
     sorted_features = sorted(feature_counts.items(), key=lambda x: x[1], reverse=True)
     print(f"Features in bin {bin_label}:")
 
-    for feature, count in sorted_features[:20]:
+    for feature, count in sorted_features[:10]:
         print(f"{feature}: {count/len(group):.2f} ({count})")
 
     print("\n\n")
 
 # %%
-thrhesholds = [0.1, 0.2, 0.3, 0.4, 0.5]
-for threshold in thrhesholds:
-    print(f"Threshold: {threshold}")
-    print(f"Type B clones:", len(df_typesBC[df_typesBC["relative_change"] <= threshold]))
-    print(f"Type C clones:", len(df_typesBC[df_typesBC["relative_change"] > threshold]))
-    print()
+# study first bins
+changes_threshold = 0.2
+df_firstbins = df_typesBC[df_typesBC["relative_change"] < changes_threshold].copy()
+
+#%%
+# bin again
+df_firstbins["relative_change"].hist(bins=8, figsize=(5, 5))
+
+# %%
+df_firstbins["bin2"] = pd.cut(df_firstbins["relative_change"], bins=8)
+
+# sample again
+sampled_df = df_firstbins.groupby("bin2").apply(
+        lambda x: x.sample(n=min(n_samples, len(x)))).reset_index(drop=True)
+
+# save each bin sample to a separate csv file
+for bin_label, group in sampled_df.groupby("bin2"):
+    bin_label = str(bin_label).replace("(", "").replace("]", "").replace(",", "-").replace(" ", "")
+    csv_name = f"sample_bin2_relative_change_{bin_label}.csv"
+    print(f'doAnalysis("{csv_name}", "all");')
+    group.to_csv(csv_name, index=False)
+
+#%%
+
+# study of resource attachments issue
+attachment_features = ["ADD-ResourceAttachment.EPackage",
+                       "DELETE-ResourceAttachment.EPackage"]
+
+movement_features = ["MOVE-EClass", "MOVE-EDataType", "MOVE-EEnum", "MOVE-EPackage"]
+
+def has_root_change(row):
+    has_attachment = any(row[feature] > 0 for feature in attachment_features)
+    has_movement = any(row[feature] > 0 for feature in movement_features)
+    return has_attachment and has_movement
+
+df_typesBC["has_root_change"] = df_typesBC.apply(has_root_change, axis=1)
+
+
+print(f"Total clones with root changes: {df_typesBC['has_root_change'].sum()} / {len(df_typesBC)}")
+for bin_label, group in df_typesBC.groupby("bin"):
+    bin_label = str(bin_label).replace("(", "").replace("]", "").replace(",", "-").replace(" ", "")
+    root_changes_count = group["has_root_change"].sum()
+    total_count = len(group)
+    print(f"Bin {bin_label}: {root_changes_count}/{total_count} ({root_changes_count/total_count:.2f})")
+
 # %%

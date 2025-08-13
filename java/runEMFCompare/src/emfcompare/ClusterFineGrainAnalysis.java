@@ -23,6 +23,7 @@ import org.eclipse.emf.compare.Match;
 import org.eclipse.emf.compare.ReferenceChange;
 import org.eclipse.emf.compare.ResourceAttachmentChange;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EcorePackage;
 
 /**
  * Auxiliary script used to analyse different meta-model samples during the work
@@ -42,6 +43,15 @@ public class ClusterFineGrainAnalysis {
 		doAnalysis("sampled_relative_change_0.8-0.9.csv", "all");
 		doAnalysis("sampled_relative_change_0.9-1.0.csv", "all");
 		doAnalysis("sampled_relative_change_outliers.csv", "all");
+
+		doAnalysis("sample_bin2_relative_change_-8.1e-05-0.025.csv", "all");
+		doAnalysis("sample_bin2_relative_change_0.025-0.0499.csv", "all");
+		doAnalysis("sample_bin2_relative_change_0.0499-0.0748.csv", "all");
+		doAnalysis("sample_bin2_relative_change_0.0748-0.0997.csv", "all");
+		doAnalysis("sample_bin2_relative_change_0.0997-0.125.csv", "all");
+		doAnalysis("sample_bin2_relative_change_0.125-0.15.csv", "all");
+		doAnalysis("sample_bin2_relative_change_0.15-0.174.csv", "all");
+		doAnalysis("sample_bin2_relative_change_0.174-0.199.csv", "all");
 
 		System.out.println("Done");
 	}
@@ -96,6 +106,14 @@ public class ClusterFineGrainAnalysis {
 					writer.println("Right (old) size (ignoring annotations): " + mc.getRightSize(true));
 					writer.println("---");
 
+					writer.println("Left  (new) #EClasses: " + mc.getLeftElementCounts().getOrDefault(EcorePackage.Literals.ECLASS, 0));
+					writer.println("Right (old) #EClasses: " + mc.getRightElementCounts().getOrDefault(EcorePackage.Literals.ECLASS, 0));
+					writer.println("---");
+					
+					writer.println("Left  (new) Elem counts: " + convertAndSortMap(mc.getLeftElementCounts()));
+					writer.println("Right (old) Elem counts: " + convertAndSortMap(mc.getRightElementCounts()));
+					writer.println("---");
+
 					writer.println("Number of differences: " + mc.getNumberOfDifferences());
 					writer.println("Number of affected elements: " + mc.getNumberOfAffectedElements());
 					writer.println("Number of affected annotations: " + mc.getNumberOfAffectedAnnotations());
@@ -112,7 +130,8 @@ public class ClusterFineGrainAnalysis {
 
 					writer.println("All diffs: " + sortMap(mc.getDiffCounts()));
 					writer.println("Fine diffs: " + sortMap(diffCounts));
-					writer.println();
+					writer.println("\n\n\n");
+					
 
 					mc.dispose();
 					counter++;
@@ -176,5 +195,14 @@ public class ClusterFineGrainAnalysis {
 						LinkedHashMap::new // Preserve the order of sorted entries
 				));
 		return sortedMap;
+	}
+
+	public static Map<String, Integer> convertAndSortMap(Map<EClass, Integer> map) {
+		Map<String, Integer> convertedMap = new HashMap<>();
+
+		for (Entry<EClass, Integer> entry : map.entrySet()) {
+			convertedMap.put(entry.getKey().getName(), entry.getValue());
+		}
+		return sortMap(convertedMap);
 	}
 }

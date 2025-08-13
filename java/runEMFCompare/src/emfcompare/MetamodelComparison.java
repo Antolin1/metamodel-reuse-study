@@ -53,6 +53,7 @@ public class MetamodelComparison {
 
 	private static IDiffEngine diffEngine;
 	protected Comparison comparison;
+	protected Map<EClass, Integer> leftCounts, rightCounts;
 	protected int leftSize, rightSize;
 	protected int leftSizeIgnoringAnnotations, rightSizeIgnoringAnnotations;
 
@@ -143,9 +144,18 @@ public class MetamodelComparison {
 
 		System.out.println("Left  (new) size: " + mc.getLeftSize());
 		System.out.println("Right (old) size: " + mc.getRightSize());
+		System.out.println();
 
 		System.out.println("Left  (new) size (ignoring annotations): " + mc.getLeftSize(true));
 		System.out.println("Right (old) size (ignoring annotations): " + mc.getRightSize(true));
+		System.out.println();
+
+		System.out.println("Left  (new) #EClasses: " + mc.getLeftElementCounts().getOrDefault(EcorePackage.Literals.ECLASS, 0));
+		System.out.println("Right (old) #EClasses: " + mc.getRightElementCounts().getOrDefault(EcorePackage.Literals.ECLASS, 0));
+		System.out.println();
+
+		System.out.println("Left  (new) Elem counts: " + convertAndSortMap(mc.getLeftElementCounts()));
+		System.out.println("Right (old) Elem counts: " + convertAndSortMap(mc.getRightElementCounts()));
 		System.out.println();
 
 		System.out.println("Number of differences: " + mc.getNumberOfDifferences());
@@ -181,6 +191,15 @@ public class MetamodelComparison {
 		return sortedMap;
 	}
 
+	public static Map<String, Integer> convertAndSortMap(Map<EClass, Integer> map) {
+		Map<String, Integer> convertedMap = new HashMap<>();
+
+		for (Entry<EClass, Integer> entry : map.entrySet()) {
+			convertedMap.put(entry.getKey().getName(), entry.getValue());
+		}
+		return sortMap(convertedMap);
+	}
+
 	public Map<String, Integer> getDiffCounts() {
 		return diffCounts;
 	}
@@ -202,11 +221,14 @@ public class MetamodelComparison {
 		Resource leftResource = leftRS.getResource(leftUri, true);
 		Resource rightResource = rightRS.getResource(rightUri, true);
 
-		leftSize = countAllElements(leftResource);
-		rightSize = countAllElements(rightResource);
+		leftCounts = getElementCounts(leftResource);
+		rightCounts = getElementCounts(rightResource);
+		
+		leftSize = countAllElements(leftCounts);
+		rightSize = countAllElements(rightCounts);
 
-		leftSizeIgnoringAnnotations = countAllElements(leftResource, true);
-		rightSizeIgnoringAnnotations = countAllElements(rightResource, true);
+		leftSizeIgnoringAnnotations = countAllElements(leftCounts, true);
+		rightSizeIgnoringAnnotations = countAllElements(rightCounts, true);
 
 		// ignore xmi:ids to avoid issues when one side has them, but the other does not
 		IMatchEngine.Factory matchEngineFactory = new MatchEngineFactoryImpl(UseIdentifiers.NEVER);
@@ -585,26 +607,44 @@ public class MetamodelComparison {
 		return comparison;
 	}
 
-	protected int countAllElements(Resource resource) {
-		return countAllElements(resource, false);
-	}
-
-	protected int countAllElements(Resource resource, boolean ignoreAnnotations) {
-		int count = 0;
+	protected Map<EClass, Integer> getElementCounts(Resource resource) {
+		Map<EClass, Integer> counts = new HashMap<>();
 
 		// Use EcoreUtil to get all contents in the resource
 		Iterator<EObject> allContents = EcoreUtil.getAllContents(resource.getContents(), false);
 
 		while (allContents.hasNext()) {
 			EObject elem = allContents.next();
-			if (ignoreAnnotations && (elem.eClass().equals(EcorePackage.Literals.EANNOTATION) ||
-					elem.eClass().equals(EcorePackage.Literals.ESTRING_TO_STRING_MAP_ENTRY))) {
-				continue; // avoid counting annotation related elements
+			if (elem.eClass() != null) {
+				counts.put(elem.eClass(), counts.getOrDefault(elem.eClass(), 0) + 1);
 			}
-			count++; // Increment for each element
+		}
+
+		return counts;
+	}
+
+	protected int countAllElements(Map<EClass, Integer> elemCounts) {
+		return countAllElements(elemCounts, false);
+	}
+
+	protected int countAllElements(Map<EClass, Integer> elemCounts, boolean ignoreAnnotations) {
+		int count = elemCounts.values().stream().mapToInt(Integer::intValue).sum()
+				- elemCounts.getOrDefault(EcorePackage.Literals.EGENERIC_TYPE, 0);
+		
+		if (ignoreAnnotations) {
+			count -= elemCounts.getOrDefault(EcorePackage.Literals.EANNOTATION, 0) +
+					elemCounts.getOrDefault(EcorePackage.Literals.ESTRING_TO_STRING_MAP_ENTRY, 0);
 		}
 
 		return count;
+	}
+
+	public Map<EClass, Integer> getLeftElementCounts() {
+		return leftCounts;
+	}
+
+	public Map<EClass, Integer> getRightElementCounts() {
+		return rightCounts;
 	}
 
 	public int getLeftSize() {
