@@ -6,6 +6,11 @@ import pandas as pd
 from plotnine import *
 from scipy.stats import mannwhitneyu, spearmanr
 
+import json
+
+with open('famous_files.json', 'r') as f:
+    POPULAR_METAMODELS = json.load(f)
+
 
 def export_modified_metamodels(data_inter, data_intra):
     df_inter = data_inter[data_inter['affected_elements'] > 0].copy()
@@ -152,6 +157,16 @@ def feature_comparison(data_inter, data_intra):
 def main(args):
     data_inter = pd.read_csv(args.inter)
     data_intra = pd.read_csv(args.intra)
+    if args.remove_popular_metamodels:
+        # remove popular metamodels
+        popular_metamodels = set(POPULAR_METAMODELS)
+        print(f'Removing {len(popular_metamodels)} popular metamodels from inter and intra data')
+        print(f'Inter data size before removing popular metamodels: {len(data_inter)}')
+        print(f'Intra data size before removing popular metamodels: {len(data_intra)}')
+        data_inter = data_inter[~data_inter['original_path'].isin(popular_metamodels)]
+        data_intra = data_intra[~data_intra['original_path'].isin(popular_metamodels)]
+        print(f'Inter data size after removing popular metamodels: {len(data_inter)}')
+        print(f'Intra data size after removing popular metamodels: {len(data_intra)}')
 
     for c in data_inter.columns:
         if c not in data_intra.columns:
@@ -170,5 +185,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--inter', type=str, default='metamodel_changes_analysis/cluster_stars_with_concrete_features-inter.csv')
     parser.add_argument('--intra', type=str, default='metamodel_changes_analysis/cluster_stars_with_concrete_features-intra.csv')
+    parser.add_argument('--remove_popular_metamodels', help='Remove popular metamodels', action='store_true')
     args = parser.parse_args()
     main(args)

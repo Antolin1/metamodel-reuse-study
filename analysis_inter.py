@@ -14,6 +14,11 @@ from analysis_intra import calculate_sample_size
 
 random.seed(123)
 
+import json
+
+with open('famous_files.json', 'r') as f:
+    POPULAR_METAMODELS = json.load(f)
+
 
 def distances_inter_vs_intra(G):
     group_inter = [data['weight'] for x, y, data in G.edges(data=True) if data['weight'] != -1 and
@@ -218,6 +223,16 @@ def histogram(G):
 def main(args):
     random.seed(123)
     G = load_graph(args.db)
+    if args.remove_popular_metamodels:
+        print(f'Graph size before removing famous metamodels: {len(G)}')
+        print('Removing famous metamodels')
+        for m in POPULAR_METAMODELS:
+            # get node whose attribute local_path is equal to m
+            nodes_to_remove = [n for n in G if G.nodes[n]['local_path'] == m]
+            assert len(nodes_to_remove) == 1
+            for n in nodes_to_remove:
+                G.remove_node(n)
+        print(f'Graph size after removing famous metamodels: {len(G)}')
     # histogram(G)
     amount_inter(G)
     # distances_inter_vs_intra(G)
@@ -230,5 +245,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--db', type=str, default='dup_network.db')
     parser.add_argument('--sample', help='Remove duplicate models', action='store_true')
+    parser.add_argument('--remove_popular_metamodels', help='Remove popular metamodels', action='store_true')
     args = parser.parse_args()
     main(args)

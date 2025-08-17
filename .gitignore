@@ -258,3 +258,6 @@ metamodel_metrics.csv
 /crawler.db
 
 /metamodels-new
+/ecore_metadata_2.csv
+/ecore_metadata_final.csv
+/famous_files.json

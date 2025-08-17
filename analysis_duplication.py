@@ -84,11 +84,19 @@ def most_duplicated(G, k=10):
     print('-----------------------------------')
     ccs = [c for c in list(sorted(nx.connected_components(G), key=lambda x: get_unique_repos(G, x),
                                   reverse=True)) if len(c) > 1]
+
+    famous_files = []
     for j, c in enumerate(ccs[0:k]):
         files = [G.nodes[n]['local_path'] for n in c]
         r = list(set([G.nodes[n]['user'] + '/' + G.nodes[n]['repo'] for n in c]))
         print(f'Top {j + 1}, Components {len(c)}, Unique repos {len(r)}, Ratio {len(r) / len(c):.2f}')
         print(files)
+        famous_files += files
+
+    # save to json
+    with open('famous_files.json', 'w') as f:
+        import json
+        json.dump(famous_files, f, indent=4)
 
 
 

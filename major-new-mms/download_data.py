@@ -8,7 +8,7 @@ from github import Github, RateLimitExceededException, UnknownObjectException
 from tqdm import tqdm
 
 TOKEN = os.environ['GH_TOKEN']
-FILE = 'ecore_metadata.csv'
+FILE = 'ecore_metadata_final.csv'
 OUT_FOLDER = 'metamodels-new'
 CONN = sqlite3.connect('dup_network_new.db')
 CURSOR = CONN.cursor()
@@ -31,6 +31,9 @@ def download_github_file(repo_name, file_path, output_filename, commit_sha):
         try:
             if repo is None:
                 repo = g.get_repo(repo_name)
+                if repo.fork:
+                    print(f"Skipping forked repo: {repo_name}")
+                    return False
 
             file_content = repo.get_contents(file_path, ref=commit_sha)
             # print(commit.sha)

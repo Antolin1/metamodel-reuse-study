@@ -3,11 +3,9 @@ import matplotlib.pyplot as plt
 
 repos_to_ignore = ['lucianoMarchezan/dataSTest', 'tue-mdse/ocl-dataset']
 
-df = pd.read_csv('ecore_metadata.csv')
+df = pd.read_csv('ecore_metadata_final.csv')
 df = df[~df['repo_name'].isin(repos_to_ignore)]
 
-f = df[df["file_last_commit_date"]!=df["repo_last_commit_date"]]
-print(len(f), "xd")
 
 print(df.columns)
 
@@ -71,4 +69,11 @@ metamodel_counts_with_dates = pd.merge(metamodel_counts, repo_creation_dates, on
 metamodel_counts_with_dates_top10 = metamodel_counts_with_dates.head(20)
 print(metamodel_counts_with_dates_top10.head(20))
 
-print(df[df["path"].str.contains("/impl/")])
+df['year'] = pd.to_datetime(df['repo_creation_date']).dt.year
+print(df[df["path"].str.contains("bin/") & (df["year"] > 2023)])
+print(df[df["path"].str.contains("impl/") & (df["year"] > 2023)])
+print(df[df["path"].str.contains("src-gen/") & (df["year"] > 2023)])
+
+print(df[df["path"].str.contains("bin/") ])
+print(df[df["path"].str.contains("impl/") ])
+print(df[df["path"].str.contains("src-gen/")])
