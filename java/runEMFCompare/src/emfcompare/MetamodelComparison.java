@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -51,6 +52,12 @@ import org.eclipse.emf.ecore.xmi.impl.EcoreResourceFactoryImpl;
  */
 public class MetamodelComparison {
 
+	private static List<EClass> EPACKAGE_CONTENTS = Arrays.asList(
+			EcorePackage.Literals.EPACKAGE,
+			EcorePackage.Literals.ECLASS,
+			EcorePackage.Literals.EDATA_TYPE,
+			EcorePackage.Literals.EENUM);
+
 	private static IDiffEngine diffEngine;
 	protected Comparison comparison;
 	protected Map<EClass, Integer> leftCounts, rightCounts;
@@ -74,6 +81,9 @@ public class MetamodelComparison {
 
 	// other diffs that are not changes
 	protected List<Diff> otherDiffs = new ArrayList<>();
+
+	// diffs that are package content movements
+	protected List<Diff> packageContentMovements = new ArrayList<>();
 
 	protected String leftPath, rightPath;
 
@@ -162,6 +172,7 @@ public class MetamodelComparison {
 		System.out.println("Number of affected elements: " + mc.getNumberOfAffectedElements());
 		System.out.println("Number of affected annotations: " + mc.getNumberOfAffectedAnnotations());
 		System.out.println("Difference: " + (mc.getNumberOfAffectedElements() - mc.getNumberOfAffectedAnnotations()));
+		System.out.println("Number of package contents movements: " + mc.getNumberOfPackageContentsMovements());
 		System.out.println();
 
 		System.out.println("Ratio of affected elements (not ignoring annotations): "
@@ -255,6 +266,10 @@ public class MetamodelComparison {
 
 	public int getNumberOfAffectedAnnotations() {
 		return numberOfAffectedAnnotations;
+	}
+
+	public int getNumberOfPackageContentsMovements() {
+		return packageContentMovements.size();
 	}
 
 	protected void processDifferences() {
@@ -563,6 +578,12 @@ public class MetamodelComparison {
 
 			if (d.getKind() == DifferenceKind.CHANGE) {
 				key += "SHOULDNOTHAPPEN";
+			}
+
+			if (d.getKind() == DifferenceKind.MOVE &&
+					EPACKAGE_CONTENTS.contains(rc.getValue().eClass())) {
+
+				packageContentMovements.add(d);
 			}
 		}
 		else if (d instanceof AttributeChange) {

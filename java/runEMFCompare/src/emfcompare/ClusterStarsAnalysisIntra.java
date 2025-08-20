@@ -71,7 +71,8 @@ public class ClusterStarsAnalysisIntra {
 
 		String[] metadata = { "repo", "repo_name", "cluster", "original", "original_path", "duplicate", "duplicate_path",
 				"affected_elements", "original_size", "duplicate_size",
-				"affected_annotations", "original_size_no_annotations", "duplicate_size_no_annotations" };
+				"affected_annotations", "original_size_no_annotations", "duplicate_size_no_annotations",
+				"package_content_movements" };
 
 		String[] featuresArray = features.toArray(new String[0]);
 
@@ -84,7 +85,7 @@ public class ClusterStarsAnalysisIntra {
 				Reader reader = new FileReader(csvFile);
 				CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader());
 				PrintWriter writer = new PrintWriter(new FileWriter(outputCsv));
-				CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(header))) {
+				CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(header).withRecordSeparator("\n"))) {
 
 			repo = 0;
 			for (CSVRecord csvRecord : csvParser) {
@@ -116,6 +117,9 @@ public class ClusterStarsAnalysisIntra {
 				newRecord.add("" + mc.getNumberOfAffectedAnnotations());
 				newRecord.add("" + mc.getRightSize(true));
 				newRecord.add("" + mc.getLeftSize(true));
+
+				// count package content movements
+				newRecord.add("" + mc.getNumberOfPackageContentsMovements());
 
 				Set<String> foundFeatures = FeaturesUtil.getConcreteFeatures(mc);
 

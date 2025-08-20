@@ -17,7 +17,7 @@ import org.apache.commons.csv.CSVRecord;
 /**
  * Obtains the difference features from the meta-models
  */
-public class ClusterStarsAnalysisConcreteFeatures {
+public class ClusterStarsAnalysisInter {
 
 	public static void main(String[] args) {
 		String rootFolder = "../../";
@@ -27,7 +27,8 @@ public class ClusterStarsAnalysisConcreteFeatures {
 
 		String[] metadata = { "cluster", "original", "original_path", "duplicate", "duplicate_path",
 				"affected_elements", "original_size", "duplicate_size",
-				"affected_annotations", "original_size_no_annotations", "duplicate_size_no_annotations" };
+				"affected_annotations", "original_size_no_annotations", "duplicate_size_no_annotations",
+				"package_content_movements" };
 		
 		String[] features = { "ADD-EAnnotation", "ADD-EAttribute", "ADD-EClass", "ADD-EDataType", "ADD-EEnum", "ADD-EEnumLiteral", "ADD-EGenericType",
 				"ADD-EObject", "ADD-EOperation", "ADD-EPackage", "ADD-EParameter", "ADD-EReference", "ADD-EStringToStringMapEntry",
@@ -65,7 +66,7 @@ public class ClusterStarsAnalysisConcreteFeatures {
 				Reader reader = new FileReader(inputCsv);
 				CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader());
 				PrintWriter writer = new PrintWriter(new FileWriter(outputCsv));
-				CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(header))) {
+				CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(header).withRecordSeparator("\n"))) {
 
 			for (CSVRecord csvRecord : csvParser) {
 				if (cluster != Integer.parseInt(csvRecord.get("cluster"))) {
@@ -99,6 +100,9 @@ public class ClusterStarsAnalysisConcreteFeatures {
 					newRecord.add("" + mc.getNumberOfAffectedAnnotations());
 					newRecord.add("" + mc.getRightSize(true));
 					newRecord.add("" + mc.getLeftSize(true));
+
+					// count package content movements
+					newRecord.add("" + mc.getNumberOfPackageContentsMovements());
 
 					Set<String> foundFeatures = FeaturesUtil.getConcreteFeatures(mc);
 

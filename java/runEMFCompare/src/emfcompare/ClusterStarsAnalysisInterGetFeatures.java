@@ -16,7 +16,7 @@ import org.apache.commons.csv.CSVRecord;
  * Obtains the set of difference features that are found in the analysed meta-model,
  * i.e., the columns that the dataset of difference features will have
  */
-public class ClusterStarsAnalysisGetConcreteFeatures {
+public class ClusterStarsAnalysisInterGetFeatures {
 
 	public static void main(String[] args) {
 		String rootFolder = "../../";
