@@ -32,26 +32,17 @@ public class ClusterFineGrainAnalysis {
 
 	public static void main(String[] args) {
 
-		doAnalysis("sampled_relative_change_-0.000882-0.1.csv", "all");
-		doAnalysis("sampled_relative_change_0.1-0.2.csv", "all");
-		doAnalysis("sampled_relative_change_0.2-0.3.csv", "all");
-		doAnalysis("sampled_relative_change_0.3-0.4.csv", "all");
-		doAnalysis("sampled_relative_change_0.4-0.5.csv", "all");
-		doAnalysis("sampled_relative_change_0.5-0.6.csv", "all");
-		doAnalysis("sampled_relative_change_0.6-0.7.csv", "all");
-		doAnalysis("sampled_relative_change_0.7-0.8.csv", "all");
-		doAnalysis("sampled_relative_change_0.8-0.9.csv", "all");
-		doAnalysis("sampled_relative_change_0.9-1.0.csv", "all");
-		doAnalysis("sampled_relative_change_outliers.csv", "all");
-
-		doAnalysis("sample_bin2_relative_change_-8.1e-05-0.025.csv", "all");
-		doAnalysis("sample_bin2_relative_change_0.025-0.0499.csv", "all");
-		doAnalysis("sample_bin2_relative_change_0.0499-0.0748.csv", "all");
-		doAnalysis("sample_bin2_relative_change_0.0748-0.0997.csv", "all");
-		doAnalysis("sample_bin2_relative_change_0.0997-0.125.csv", "all");
-		doAnalysis("sample_bin2_relative_change_0.125-0.15.csv", "all");
-		doAnalysis("sample_bin2_relative_change_0.15-0.174.csv", "all");
-		doAnalysis("sample_bin2_relative_change_0.174-0.199.csv", "all");
+		doAnalysis("samples/sampled_relative_change_-0.000728-0.092.csv", "all");
+		doAnalysis("samples/sampled_relative_change_0.092-0.184.csv", "all");
+		doAnalysis("samples/sampled_relative_change_0.184-0.276.csv", "all");
+		doAnalysis("samples/sampled_relative_change_0.276-0.367.csv", "all");
+		doAnalysis("samples/sampled_relative_change_0.367-0.459.csv", "all");
+		doAnalysis("samples/sampled_relative_change_0.459-0.551.csv", "all");
+		doAnalysis("samples/sampled_relative_change_0.551-0.643.csv", "all");
+		doAnalysis("samples/sampled_relative_change_0.643-0.734.csv", "all");
+		doAnalysis("samples/sampled_relative_change_0.734-0.826.csv", "all");
+		doAnalysis("samples/sampled_relative_change_0.826-0.918.csv", "all");
+		doAnalysis("samples/sampled_relative_change_outliers.csv", "all");
 
 		System.out.println("Done");
 	}
@@ -73,6 +64,7 @@ public class ClusterFineGrainAnalysis {
 
 				try {
 					MetamodelComparison mc = new MetamodelComparison();
+					mc.setUseAllTypes(true);
 					// left takes the new model role, so right is the "original"
 					mc.compare(
 							metamodelsFolder + csvRecord.get("duplicate_path"),
@@ -119,12 +111,20 @@ public class ClusterFineGrainAnalysis {
 					writer.println("Number of affected annotations: " + mc.getNumberOfAffectedAnnotations());
 					writer.println("Difference: " + (mc.getNumberOfAffectedElements() - mc.getNumberOfAffectedAnnotations()));
 					writer.println("---");
+					writer.println("Number of package contents movements: " + mc.getNumberOfPackageContentsMovements());
+					writer.println("---");
+
+					double k = 18.0;
+					double weight = mc.getRightSize(true) / (mc.getRightSize(true) + k);
 
 					writer.println("Ratio of affected elements (not ignoring annotations): "
-							+ (float) mc.getNumberOfAffectedElements() / mc.getRightSize());
+							+ weight * mc.getNumberOfAffectedElements() / mc.getRightSize());
 
 					writer.println("Ratio of affected elements (ignoring annotations): "
-							+ (float) (mc.getNumberOfAffectedElements() - mc.getNumberOfAffectedAnnotations()) / mc.getRightSize(true));
+							+ weight * (mc.getNumberOfAffectedElements() - mc.getNumberOfAffectedAnnotations()) / mc.getRightSize(true));
+
+					writer.println("Ratio of affected elements (ignoring annotations, unweighted): "
+							+ (double) (mc.getNumberOfAffectedElements() - mc.getNumberOfAffectedAnnotations()) / mc.getRightSize(true));
 
 					writer.println("@@@@@@@@@@@@@@@@");
 
