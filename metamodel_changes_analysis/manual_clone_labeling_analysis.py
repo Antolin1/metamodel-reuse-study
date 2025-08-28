@@ -49,6 +49,13 @@ optimal_threshold = thresholds[optimal_idx]
 print(f"Optimal threshold for classification: {optimal_threshold:.4f}")
 
 #%%
+# get sensitivity and specificity at optimal threshold
+sensitivity = tpr[optimal_idx]
+specificity = 1 - fpr[optimal_idx]
+print(f"Sensitivity (True Positive Rate) at optimal threshold: {sensitivity:.2f}")
+print(f"Specificity (True Negative Rate) at optimal threshold: {specificity:.2f}")
+
+#%%
 # calculate precision, recall, f1-score for the optimal threshold
 from sklearn.metrics import precision_score, recall_score, f1_score
 df['predicted_label'] = df['relative_change'].apply(lambda x: 1 if x >= optimal_threshold else 0)
