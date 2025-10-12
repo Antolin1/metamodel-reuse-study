@@ -58,21 +58,18 @@ def intra_project_reuse(G, args):
 
     # Create the plot
     plot = (
-            ggplot(data, aes(y='st1')) +  # Use 'y' for horizontal boxplot
-            geom_boxplot() +
-            # scale_y_log10() +  # Log scale for x-axis
-            labs(
-                # title='Distribution of $Dup\mathcal{M}_r$',
-                y='$Dup\mathcal{M}_r$',
-                x=''  # No y-axis label since it's horizontal
-            ) +
-            theme_minimal() +
-            theme(
-                plot_title=element_text(size=16),  # Title font size
-                axis_title_x=element_text(size=14),  # X-axis label font size
-                axis_text_y=element_blank()
-            )
-            + coord_flip()
+            ggplot(data, aes(x='" "', y='st1'))  # dummy x for single boxplot
+            + geom_boxplot(width=0.3)
+            # + coord_flip()  # rotate 90º
+            + labs(
+        y='$Dup\mathcal{M}_r$',
+        x=''
+    )
+            + theme_minimal()
+            + theme(
+        plot_title=element_text(size=16),
+        axis_title_x=element_text(size=14)
+    )
     )
 
     plot.save("intra_st1.pdf", format="pdf")
